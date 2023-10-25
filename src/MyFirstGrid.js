@@ -4,7 +4,6 @@ import { Responsive, WidthProvider } from "react-grid-layout";
 import '/node_modules/react-grid-layout/css/styles.css';
 import '/node_modules/react-resizable/css/styles.css';
 import './example-styles.css';
-import hri_data from './data/my_hri.json';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
@@ -53,7 +52,8 @@ export default class ToolboxLayout extends React.Component {
     compactType: null,
     mounted: false,
     layouts: { lg: this.props.initialLayout },
-    toolbox: { lg: [] }
+    toolbox: { lg: [] },
+    hri_data: null
   };
 
   componentDidMount() {
@@ -76,7 +76,7 @@ export default class ToolboxLayout extends React.Component {
               Static - {l.i}
             </span>
           ) : (
-            <span className="text">{l.i} - {hri_data[l.i].TrustedAdvisorCheckName}</span>
+            <span className="text">{l.i} - {this.state.hri_data[l.i].TrustedAdvisorCheckName}</span>
           )}
         </div>
       );
@@ -134,34 +134,44 @@ export default class ToolboxLayout extends React.Component {
     });
   };
 
-  onNewHriInit = () => {
-    this.setState(prevState => {
-        return {
-          toolbox: {
-            ...prevState.layouts,
-            [prevState.currentBreakpoint]: [
-              ...(prevState.layouts[prevState.currentBreakpoint] || [])
-            ]
-          },
-          layouts: {
-            ...prevState.toolbox,
-            [prevState.currentBreakpoint]: prevState.toolbox[
-              prevState.currentBreakpoint
-            ]
-          }
-        };
-      });
-  };
-
   onLayoutChange = (layout, layouts) => {
     this.props.onLayoutChange(layout, layouts);
     this.setState({ layouts });
   };
 
+  resetLayout = () => {
+    this.setState({
+      layouts: { lg: [] },
+      toolbox: { lg: [] },
+      hri_data: null
+    });
+  }
+
+  uploadFile = (event) => {
+    let file = event.target.files[0];
+    this.resetLayout();
+    
+    if (file) {
+      let fileReader = new FileReader(); 
+      fileReader.readAsText(file); 
+      fileReader.onload = () => {
+        let layout = generateLayout(true, JSON.parse(fileReader.result));
+        this.setState({
+          layouts: { lg: layout },
+          hri_data: JSON.parse(fileReader.result)
+        });
+        hriInit(this);
+      }; 
+      fileReader.onerror = () => {
+        console.log(fileReader.error);
+      }; 
+    }
+  }
+
   render() {
     return (
-      <div>        
-        <button onClick={this.onNewHriInit}>Init HRI</button>
+      <div>
+        <span>Upload HRI json file <input type="file" name="myFile" onChange={this.uploadFile} /></span>
         <ToolBox
           items={this.state.toolbox[this.state.currentBreakpoint] || []}
           onTakeItem={this.onTakeItem}
@@ -186,8 +196,8 @@ export default class ToolboxLayout extends React.Component {
   }
 }
 
-function hriInit(myState) {
-    myState.setState(prevState => {
+function hriInit(currentState) {
+    currentState.setState(prevState => {
         return {
           toolbox: {
             ...prevState.layouts,
@@ -206,17 +216,21 @@ function hriInit(myState) {
     return
 }
 
-function generateLayout() {
-    let hri_length = hri_data.length;
-    return _.map(_.range(0, hri_length), function(item, i) {
-        return {
-        x: 5,
-        y: 9,
-        w: 2,
-        h: 3,
-        i: i.toString(),
-        static: false
-        };
-    });
+function generateLayout(uploaded=false,hri_data=null) {
+    if (uploaded === false) {
+        return [];
+    } else {
+      let hri_length = hri_data.length;
+      return _.map(_.range(0, hri_length), function(item, i) {
+          return {
+          x: 5,
+          y: 9,
+          w: 2,
+          h: 3,
+          i: i.toString(),
+          static: false
+          };
+      });
+    }
 }
 
