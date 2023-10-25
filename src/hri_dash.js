@@ -1,11 +1,114 @@
 import React from "react";
+import ReactModal from 'react-modal';
+import Table from 'rc-table';
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
+import {copyToClipboard, replaceHtmlTags} from './utils/utilities';
 import '/node_modules/react-grid-layout/css/styles.css';
 import '/node_modules/react-resizable/css/styles.css';
 import './example-styles.css';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
+ReactModal.setAppElement('#root');
+
+class HriDetails extends React.Component {
+  constructor () {
+    super();
+    this.state = {
+      showModal: false
+    };
+    
+    this.handleOpenModal = this.handleOpenModal.bind(this);
+    this.handleCloseModal = this.handleCloseModal.bind(this);
+  }
+  
+  handleOpenModal () {
+    this.setState({ showModal: true });
+  }
+  
+  handleCloseModal () {
+    this.setState({ showModal: false });
+  }
+  
+  render () {
+    const bp_url = 'https://docs.aws.amazon.com/wellarchitected/latest/framework/' + this.props.data.WABestPracticeId + '.html'
+    const columns = [
+      {
+        title: 'Name',
+        dataIndex: 'name',
+        key: 'name',
+        width: 100,
+      },
+      {
+        title: 'Description',
+        dataIndex: 'description',
+        key: 'description',
+        width: 300,
+        render: () => <span>{replaceHtmlTags(this.props.data.TrustedAdvisorCheckDesc)}</span>,
+      },
+      {
+        title: 'Best Practice',
+        dataIndex: 'bestPractice',
+        key: 'bestPractice',
+        width: 150,
+        render: () => <a href={bp_url} target="_blank">{this.props.data.WABestPracticeTitle}</a>,
+      },
+      {
+        title: 'Pillar',
+        dataIndex: 'pillar',
+        key: 'pillar',
+        width: 100,
+      },
+      {
+        title: 'Business Risk',
+        dataIndex: 'businessRisk',
+        key: 'businessRisk',
+        width: 100,
+      },
+      {
+        title: 'Resources at Risk',
+        dataIndex: 'resources',
+        key: 'resources',
+        width: 300,
+      },
+    ];
+
+    const data = [
+      { name: this.props.data.TrustedAdvisorCheckName,
+        description: this.props.data.TrustedAdvisorCheckDesc,
+        bestPractice: this.props.data.WABestPracticeTitle,
+        pillar: this.props.data.WAPillarId,
+        businessRisk: this.props.data.WABestPracticeRisk,
+        resources: JSON.stringify(this.props.data.FlaggedResources, null, 4),
+        key: '1' 
+      },
+    ];
+
+    return (
+      <div>
+        <button style={{marginTop: 10 + 'px'}} onClick={this.handleOpenModal}>More details..</button>
+        <ReactModal 
+           isOpen={this.state.showModal}
+           contentLabel="HRI Details Modal"
+           style={{
+              overlay: {
+                backgroundColor: 'aliceblue'
+              },
+              content: {
+                color: 'black'
+              }
+            }}
+        >
+          <span>
+            <button style={{marginRight: 10 + 'px'}} onClick={this.handleCloseModal}>Close</button>
+            <button onClick={() => copyToClipboard(JSON.stringify(this.props.data, undefined, 4))}>Copy</button>
+          </span>
+          <Table columns={columns} data={data} className="styled-table"/>
+        </ReactModal>
+      </div>
+    );
+  }
+}
 
 class ToolBoxItem extends React.Component {
   render() {
@@ -14,11 +117,13 @@ class ToolBoxItem extends React.Component {
         className="toolbox__items__item"
         onClick={this.props.onTakeItem.bind(undefined, this.props.item)}
       >
-        {this.props.item.i}
+        {parseInt(this.props.item.i) + 1} - {this.props.hri_data[this.props.item.i].WAPillarId}
+        <span class="toolbox__items__item_tooltip">{this.props.hri_data[this.props.item.i].TrustedAdvisorCheckName}</span>
       </div>
     );
   }
 }
+
 class ToolBox extends React.Component {
   render() {
     return (
@@ -30,6 +135,7 @@ class ToolBox extends React.Component {
               key={item.i}
               item={item}
               onTakeItem={this.props.onTakeItem}
+              hri_data={this.props.hri_data}
             />
           ))}
         </div>
@@ -76,7 +182,7 @@ export default class ToolboxLayout extends React.Component {
               Static - {l.i}
             </span>
           ) : (
-            <span className="text">{l.i} - {this.state.hri_data[l.i].TrustedAdvisorCheckName}</span>
+            <span className="text">{parseInt(l.i) + 1} - {this.state.hri_data[l.i].TrustedAdvisorCheckName}<HriDetails data={this.state.hri_data[l.i]}/></span>
           )}
         </div>
       );
@@ -169,13 +275,19 @@ export default class ToolboxLayout extends React.Component {
   }
 
   render() {
+    const props = 1;
     return (
       <div>
         <span>Upload HRI json file <input type="file" name="myFile" onChange={this.uploadFile} /></span>
         <ToolBox
           items={this.state.toolbox[this.state.currentBreakpoint] || []}
           onTakeItem={this.onTakeItem}
+          hri_data={this.state.hri_data}
         />
+        <div className="yAxisTop">Low Complexity</div>
+        <div className="yAxisBottom">High Complexity</div>
+        <div className="xAxisLeft">Low Impact</div>
+        <div className="xAxisRight">High Impact</div>
         <div className="verticalLine"></div>
         <hr width="100%" color="orange" className="horizontalLine"></hr>
         <ResponsiveReactGridLayout
