@@ -96,17 +96,6 @@ export default class ToolboxLayout extends React.Component {
     }));
   };
 
-  onCompactTypeChange = () => {
-    const { compactType: oldCompactType } = this.state;
-    const compactType =
-      oldCompactType === "horizontal"
-        ? "vertical"
-        : oldCompactType === "vertical"
-        ? null
-        : "horizontal";
-    this.setState({ compactType });
-  };
-
   onTakeItem = item => {
     this.setState(prevState => ({
       toolbox: {
@@ -146,8 +135,6 @@ export default class ToolboxLayout extends React.Component {
   };
 
   onNewHriInit = () => {
-    const CheckId = hri_data[0].TrustedAdvisorCheckId;
-    console.log(CheckId); // output 'testing'
     this.setState(prevState => {
         return {
           toolbox: {
@@ -171,20 +158,9 @@ export default class ToolboxLayout extends React.Component {
     this.setState({ layouts });
   };
 
-  onNewLayout = () => {
-    this.setState({
-      layouts: { lg: generateLayout() }
-    });
-  };
-
   render() {
     return (
-      <div>
-        {/* <button onClick={this.onNewLayout}>Generate New Layout</button>
-        <button onClick={this.onCompactTypeChange}>
-          Change Compaction Type
-        </button> */}
-        
+      <div>        
         <button onClick={this.onNewHriInit}>Init HRI</button>
         <ToolBox
           items={this.state.toolbox[this.state.currentBreakpoint] || []}
@@ -197,10 +173,7 @@ export default class ToolboxLayout extends React.Component {
           layouts={this.state.layouts}
           onBreakpointChange={this.onBreakpointChange}
           onLayoutChange={this.onLayoutChange}
-          // WidthProvider option
           measureBeforeMount={false}
-          // I like to have it animate on mount. If you don't, delete `useCSSTransforms` (it's default `true`)
-          // and set `measureBeforeMount={true}`.
           useCSSTransforms={this.state.mounted}
           compactType={this.state.compactType} clp removed this
           preventCollision={!this.state.compactType}
@@ -212,20 +185,6 @@ export default class ToolboxLayout extends React.Component {
     );
   }
 }
-
-// function generateLayout() {
-//   return _.map(_.range(0, 25), function(item, i) {
-//     var y = Math.ceil(Math.random() * 4) + 1;
-//     return {
-//       x: (_.random(0, 5) * 2) % 12,
-//       y: Math.floor(i / 6) * y,
-//       w: 2,
-//       h: y,
-//       i: i.toString(),
-//       static: Math.random() < 0.05
-//     };
-//   });
-// }
 
 function hriInit(myState) {
     myState.setState(prevState => {
@@ -249,13 +208,12 @@ function hriInit(myState) {
 
 function generateLayout() {
     let hri_length = hri_data.length;
-    return _.map(_.range(0, hri_length - 40), function(item, i) {
+    return _.map(_.range(0, hri_length), function(item, i) {
         return {
         x: 5,
         y: 9,
         w: 2,
         h: 3,
-        // i: i.toString() + ' - ' + hri_data[i].TrustedAdvisorCheckName,
         i: i.toString(),
         static: false
         };

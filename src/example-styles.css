@@ -4,9 +4,7 @@ body {
   #content {
     width: 100%;
   }
-  /* clp changes */
   .react-grid-layout {
-    /* background: #eee; */
     margin-top: 10px;
   }
   .verticalLine {
@@ -17,33 +15,12 @@ body {
     bottom: 0%;
     left: 50%;
   }
-  /* .horizontalLine {
-    position: absolute;
-    width: 6px;
-    top: 20%;
-    bottom: 0%;
-    left: 50%;
-    background-color: orange;
-    transform: rotate(90deg);
-  } */
   .horizontalLine {
     position: absolute;
     display: flex;
     flex-direction: row;
     top: 55%;
   }
-  /* .horizontalLine {
-    display: flex;
-    flex-direction: row;
-    top: 50%;
-  }
-  .horizontalLine:before,
-  .horizontalLine:after {
-         content: "";
-         flex: 1 1;
-         border-bottom: 3px solid orange;
-         margin: auto;
-  } */
   .layoutJSON {
     background: #ddd;
     border: 1px solid black;
