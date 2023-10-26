@@ -10,9 +10,9 @@ body {
   }
   .verticalLine {
     position: absolute;
-    background-color: orange;
-    width: 2.5px;
-    top: 177px;
+    background-color: rgb(0, 0, 0);
+    width: 2px;
+    top: 290px;
     bottom: 0%;
     left: 50%;
     z-index: -1;
@@ -21,36 +21,62 @@ body {
     position: absolute;
     display: flex;
     flex-direction: row;
-    top: 55%;
+    top: 63%;
     z-index: -1;
   }
-  /* Low Complexity */
+  /* High Impact */
   .yAxisTop {
-    left: 47%;
-    top: 177px;
+    left: 48%;
+    top: 290px;
     position: absolute;
-    background-color: rgba(255, 166, 0, 0.736);
-  }
-  /* High Complexity */
-  .yAxisBottom {
-    left: 47%;
-    bottom: 0%;
-    position: absolute;
-    background-color: rgba(255, 166, 0, 0.736);
+    color: red;
+    background-color: rgb(255, 255, 255);
+    font-weight: bold;
   }
   /* Low Impact */
+  .yAxisBottom {
+    left: 48%;
+    bottom: 0%;
+    position: absolute;
+    color: green;
+    background-color: rgb(255, 255, 255);
+    font-weight: bold;
+  }
+  /* High Urgency */
   .xAxisLeft {
     left: 0%;
-    bottom: 44.5%;
+    bottom: 36.5%;
     position: absolute;
-    background-color: rgba(255, 166, 0, 0.736);
+    color: red;
+    background-color: rgb(255, 255, 255);
+    font-weight: bold;
   }
-  /* High Impact */
+  /* Low Urgency */
   .xAxisRight {
     left: 95%;
-    bottom: 44.5%;
+    bottom: 36.5%;
     position: absolute;
-    background-color: rgba(255, 166, 0, 0.736);
+    color: green;
+    background-color: rgb(255, 255, 255);
+    font-weight: bold;
+  }
+  .hidden {
+      opacity: 0;
+  }
+  .polarisInputButton {
+      position: absolute;
+  }
+  .inputButton {
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      margin-left: -29%;
+      margin-top: -3%;
+      position: absolute;
+  }
+  .column {
+    float: left;
+    width: 50%;
   }
   .styled-table {
     border-collapse: collapse;
@@ -105,8 +131,8 @@ body {
     box-sizing: border-box;
   }
   .react-grid-item:not(.react-grid-placeholder) {
-    background: #ccccccdd;
-    border: 1px solid black;
+    /* background: #ccccccdd; */
+    /* border: 1px solid black; */
   }
   .react-grid-item.resizing {
     opacity: 0.9;
@@ -139,11 +165,10 @@ body {
   }
   
   .toolbox {
-    background-color: #f79902b4;
+    background-color: #ffffff;
     width: 100%;
-    height: 120px;
+    height: 130px;
     overflow: scroll;
-    margin-top: 10px;
   }
   
   .hide-button {
@@ -170,8 +195,8 @@ body {
     height: 40px;
     padding: 10px;
     margin: 5px;
-    border: 1px solid black;
-    background-color: #ddd;
+    /* border: 1px solid black;
+    background-color: #ddd; */
   }
   /* Tooltip text */
   .toolbox__items__item .toolbox__items__item_tooltip {

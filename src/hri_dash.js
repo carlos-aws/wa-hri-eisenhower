@@ -1,15 +1,23 @@
 import React from "react";
-import ReactModal from 'react-modal';
-import Table from 'rc-table';
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import {copyToClipboard, replaceHtmlTags} from './utils/utilities';
+import Button from '@cloudscape-design/components/button';
+import Container from "@cloudscape-design/components/container";
+import SpaceBetween from "@cloudscape-design/components/space-between";
+import Header from "@cloudscape-design/components/header";
+import Tabs from "@cloudscape-design/components/tabs";
+import Badge from "@cloudscape-design/components/badge";
+import Modal from "@cloudscape-design/components/modal";
+import Link from "@cloudscape-design/components/link";
+import Box from "@cloudscape-design/components/box";
+import Table from "@cloudscape-design/components/table";
+import '@cloudscape-design/global-styles/index.css';
 import '/node_modules/react-grid-layout/css/styles.css';
 import '/node_modules/react-resizable/css/styles.css';
 import './example-styles.css';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
-ReactModal.setAppElement('#root');
 
 class HriDetails extends React.Component {
   constructor () {
@@ -32,79 +40,76 @@ class HriDetails extends React.Component {
   
   render () {
     const bp_url = 'https://docs.aws.amazon.com/wellarchitected/latest/framework/' + this.props.data.WABestPracticeId + '.html'
-    const columns = [
-      {
-        title: 'Name',
-        dataIndex: 'name',
-        key: 'name',
-        width: 100,
-      },
-      {
-        title: 'Description',
-        dataIndex: 'description',
-        key: 'description',
-        width: 300,
-        render: () => <span>{replaceHtmlTags(this.props.data.TrustedAdvisorCheckDesc)}</span>,
-      },
-      {
-        title: 'Best Practice',
-        dataIndex: 'bestPractice',
-        key: 'bestPractice',
-        width: 150,
-        render: () => <a href={bp_url} target="_blank">{this.props.data.WABestPracticeTitle}</a>,
-      },
-      {
-        title: 'Pillar',
-        dataIndex: 'pillar',
-        key: 'pillar',
-        width: 100,
-      },
-      {
-        title: 'Business Risk',
-        dataIndex: 'businessRisk',
-        key: 'businessRisk',
-        width: 100,
-      },
-      {
-        title: 'Resources at Risk',
-        dataIndex: 'resources',
-        key: 'resources',
-        width: 300,
-      },
-    ];
-
-    const data = [
-      { name: this.props.data.TrustedAdvisorCheckName,
-        description: this.props.data.TrustedAdvisorCheckDesc,
-        bestPractice: this.props.data.WABestPracticeTitle,
-        pillar: this.props.data.WAPillarId,
-        businessRisk: this.props.data.WABestPracticeRisk,
-        resources: JSON.stringify(this.props.data.FlaggedResources, null, 4),
-        key: '1' 
-      },
-    ];
 
     return (
       <div>
-        <button style={{marginTop: 10 + 'px'}} onClick={this.handleOpenModal}>More details..</button>
-        <ReactModal 
-           isOpen={this.state.showModal}
-           contentLabel="HRI Details Modal"
-           style={{
-              overlay: {
-                backgroundColor: 'aliceblue'
-              },
-              content: {
-                color: 'black'
-              }
-            }}
+        <Button variant="inline-link" onClick={this.handleOpenModal}>More details</Button>
+        <Modal
+            size={'max'}
+            expandToFit={true}
+            header={this.props.data.TrustedAdvisorCheckName}
+            footer={
+              <Box float="right">
+                <SpaceBetween direction="horizontal" size="xs">
+                  <Button iconName="copy" variant="normal" onClick={() => copyToClipboard(JSON.stringify(this.props.data, undefined, 4))}>Copy</Button>
+                </SpaceBetween>
+              </Box>
+            }
+            visible={this.state.showModal}
+            onDismiss={this.handleCloseModal}
         >
-          <span>
-            <button style={{marginRight: 10 + 'px'}} onClick={this.handleCloseModal}>Close</button>
-            <button onClick={() => copyToClipboard(JSON.stringify(this.props.data, undefined, 4))}>Copy</button>
-          </span>
-          <Table columns={columns} data={data} className="styled-table"/>
-        </ReactModal>
+                <Table 
+                  columnDefinitions={[
+                    {
+                      id: "name",
+                      header: "Name",
+                      cell: (item) => item.TrustedAdvisorCheckName || "-"
+                    },
+                    {
+                      id: "description",
+                      header: "Description",
+                      cell: (item) => <span>{replaceHtmlTags(item.TrustedAdvisorCheckDesc)}</span> || "-"
+                    },
+                    {
+                      id: "bestPractice",
+                      header: "Best Practice",
+                      cell: (item) => (
+                        <Link external href={bp_url}>{item.WABestPracticeTitle || "-"}</Link>
+                      )
+                    },
+                    {
+                      id: "pillar",
+                      header: "Pillar",
+                      cell: (item) => item.WAPillarId || "-"
+                    },
+                    {
+                      id: "businessRisk",
+                      header: "Business Risk",
+                      cell: (item) => item.WABestPracticeRisk || "-"
+                    },
+                    {
+                      id: "resource",
+                      header: "Resource at Risk",
+                      cell: (item) => JSON.stringify(item.FlaggedResources, null, 4) || "-"
+                    },
+                  ]}
+                  items={[this.props.data]}
+                  loadingText="Loading data"
+                  sortingDisabled
+                  wrapLines
+                  empty={
+                    <Box
+                      margin={{ vertical: "xs" }}
+                      textAlign="center"
+                      color="inherit"
+                    >
+                      <SpaceBetween size="m">
+                        <b>No data</b>
+                      </SpaceBetween>
+                    </Box>
+                  }
+                />
+        </Modal>
       </div>
     );
   }
@@ -113,33 +118,11 @@ class HriDetails extends React.Component {
 class ToolBoxItem extends React.Component {
   render() {
     return (
-      <div
-        className="toolbox__items__item"
-        onClick={this.props.onTakeItem.bind(undefined, this.props.item)}
-      >
-        {parseInt(this.props.item.i) + 1} - {this.props.hri_data[this.props.item.i].WAPillarId}
-        <span class="toolbox__items__item_tooltip">{this.props.hri_data[this.props.item.i].TrustedAdvisorCheckName}</span>
-      </div>
-    );
-  }
-}
-
-class ToolBox extends React.Component {
-  render() {
-    return (
-      <div className="toolbox">
-        <span className="toolbox__title">High Risk Issues</span>
-        <div className="toolbox__items">
-          {this.props.items.map(item => (
-            <ToolBoxItem
-              key={item.i}
-              item={item}
-              onTakeItem={this.props.onTakeItem}
-              hri_data={this.props.hri_data}
-            />
-          ))}
-        </div>
-      </div>
+      // <div className="toolbox__items__item">
+        <Button iconName="add-plus" variant="normal" onClick={this.props.onTakeItem.bind(undefined, this.props.item)}>
+          {parseInt(this.props.item.i) + 1} - {this.props.hriData[this.props.item.i].TrustedAdvisorCheckName}
+        </Button>
+      // </div>
     );
   }
 }
@@ -159,7 +142,8 @@ export default class ToolboxLayout extends React.Component {
     mounted: false,
     layouts: { lg: this.props.initialLayout },
     toolbox: { lg: [] },
-    hri_data: null
+    hriData: null,
+    activeTab: 'highUrgency'
   };
 
   componentDidMount() {
@@ -170,20 +154,20 @@ export default class ToolboxLayout extends React.Component {
   generateDOM() {
     return _.map(this.state.layouts[this.state.currentBreakpoint], l => {
       return (
-        <div key={l.i} className={l.static ? "static" : ""}>
-          <div className="hide-button" onClick={this.onPutItem.bind(this, l)}>
-            &times;
-          </div>
-          {l.static ? (
-            <span
-              className="text"
-              title="This item is static and cannot be removed or resized."
-            >
-              Static - {l.i}
-            </span>
-          ) : (
-            <span className="text">{parseInt(l.i) + 1} - {this.state.hri_data[l.i].TrustedAdvisorCheckName}<HriDetails data={this.state.hri_data[l.i]}/></span>
-          )}
+        <div key={l.i}>
+          <Container
+            disableContentPaddings
+            disableHeaderPaddings
+            header={
+              <Header
+                variant="h3"
+              >
+                {parseInt(l.i) + 1} - {this.state.hriData[l.i].TrustedAdvisorCheckName}<HriDetails data={this.state.hriData[l.i]}/>
+              </Header>
+            }
+          >
+            <Button variant="normal" onClick={this.onPutItem.bind(this, l)}>Close</Button>
+          </Container>
         </div>
       );
     });
@@ -249,8 +233,20 @@ export default class ToolboxLayout extends React.Component {
     this.setState({
       layouts: { lg: [] },
       toolbox: { lg: [] },
-      hri_data: null
+      hriData: null
     });
+  }
+
+  expandFlaggedResources = (hriData) => {
+    let expandedHriData = [];
+    for (let i = 0; i < hriData.length; i++) {
+      for (let n = 0; n < hriData[i].FlaggedResources.length; n++) {
+        let tmpHriObject = JSON.parse(JSON.stringify(hriData[i]))
+        tmpHriObject.FlaggedResources = hriData[i].FlaggedResources[n]
+        expandedHriData.push(tmpHriObject);
+      }
+    }
+    return expandedHriData
   }
 
   uploadFile = (event) => {
@@ -261,10 +257,11 @@ export default class ToolboxLayout extends React.Component {
       let fileReader = new FileReader(); 
       fileReader.readAsText(file); 
       fileReader.onload = () => {
-        let layout = generateLayout(true, JSON.parse(fileReader.result));
+        let expandedHriData = this.expandFlaggedResources(JSON.parse(fileReader.result));
+        let layout = generateLayout(true, expandedHriData);
         this.setState({
           layouts: { lg: layout },
-          hri_data: JSON.parse(fileReader.result)
+          hriData: expandedHriData
         });
         hriInit(this);
       }; 
@@ -274,22 +271,107 @@ export default class ToolboxLayout extends React.Component {
     }
   }
 
+  renderToolBoxItems = (items) => {
+    return (items.map(item => (
+      <ToolBoxItem
+        key={item.i}
+        item={item}
+        onTakeItem={this.onTakeItem}
+        hriData={this.state.hriData}
+      />
+    )))
+  }
+
+  getHighUrgencyItems = (items) => {
+    let highUrgencyItems = [];
+    for (let i = 0; i < items.length; i++) {
+      if (this.state.hriData[items[i].i].FlaggedResources.status === 'error') {
+        highUrgencyItems.push(items[i]);
+      }
+    }
+    return highUrgencyItems
+  }
+
+  getMediumUrgencyItems = (items) => {
+    let mediumUrgencyItems = [];
+    for (let i = 0; i < items.length; i++) {
+      if (this.state.hriData[items[i].i].FlaggedResources.status === 'warning') {
+        mediumUrgencyItems.push(items[i]);
+      }
+    }
+    return mediumUrgencyItems
+  }
+
+  getLowUrgencyItems = (items) => {
+    let lowUrgencyItems = [];
+    for (let i = 0; i < items.length; i++) {
+      if (this.state.hriData[items[i].i].FlaggedResources.status === 'ok') {
+        lowUrgencyItems.push(items[i]);
+      }
+    }
+    return lowUrgencyItems
+  }
+
   render() {
-    const props = 1;
+    let highUrgencyItems = this.getHighUrgencyItems(this.state.toolbox[this.state.currentBreakpoint] || []);
+    let mediumUrgencyItems = this.getMediumUrgencyItems(this.state.toolbox[this.state.currentBreakpoint] || []);
+    let lowUrgencyItems = this.getLowUrgencyItems(this.state.toolbox[this.state.currentBreakpoint] || []);
     return (
       <div>
-        <span>Upload HRI json file <input type="file" name="myFile" onChange={this.uploadFile} /></span>
-        <ToolBox
-          items={this.state.toolbox[this.state.currentBreakpoint] || []}
-          onTakeItem={this.onTakeItem}
-          hri_data={this.state.hri_data}
-        />
-        <div className="yAxisTop">Low Complexity</div>
-        <div className="yAxisBottom">High Complexity</div>
-        <div className="xAxisLeft">Low Impact</div>
-        <div className="xAxisRight">High Impact</div>
+        <Container
+          fitHeight={true}
+          disableContentPaddings
+          header={
+            <Header
+              variant="h2"
+              actions={
+                <SpaceBetween
+                  direction="horizontal"
+                  size="xs"
+                >
+                  <Button iconName={"upload"}>
+                    <input className="inputButton hidden" type={"file"} accept={".json"} onChange={this.uploadFile} />
+                    Upload json file
+                  </Button>
+                </SpaceBetween>
+              }
+            >
+              Trusted Advisor Checks
+            </Header>
+          }
+        >
+          <Tabs
+            tabs={[
+              {
+                  label: <div>High Urgency <Badge color="red">{highUrgencyItems.length}</Badge></div>,
+                  id: 'highUrgency',
+                  content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(highUrgencyItems)}</SpaceBetween></div>
+              },
+              {
+                label: <div>Medium Urgency <Badge color="grey">{mediumUrgencyItems.length}</Badge></div>,
+                id: 'mediumUrgency',
+                content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(mediumUrgencyItems)}</SpaceBetween></div>
+              },
+              {
+                label: <div>Low Urgency <Badge color="green">{lowUrgencyItems.length}</Badge></div>,
+                id: 'lowUrgency',
+                content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(lowUrgencyItems)}</SpaceBetween></div>
+              }
+            ]}
+            activeTabId={this.state.activeTab}
+            onChange={(e) => {
+              const newTab = e.detail.activeTabId;
+              this.setState({ activeTab: newTab });
+            }}
+          />
+        </Container>
+        
+        <div className="yAxisTop">High Impact</div>
+        <div className="yAxisBottom">Low Impact</div>
+        <div className="xAxisLeft">High Urgency</div>
+        <div className="xAxisRight">Low Urgency</div>
         <div className="verticalLine"></div>
-        <hr width="100%" color="orange" className="horizontalLine"></hr>
+        <hr width="100%" color="black" className="horizontalLine"></hr>
         <ResponsiveReactGridLayout
           {...this.props}
           layouts={this.state.layouts}
@@ -297,7 +379,7 @@ export default class ToolboxLayout extends React.Component {
           onLayoutChange={this.onLayoutChange}
           measureBeforeMount={false}
           useCSSTransforms={this.state.mounted}
-          compactType={this.state.compactType} clp removed this
+          compactType={this.state.compactType}
           preventCollision={!this.state.compactType}
           allowOverlap={true}
         >
@@ -328,11 +410,11 @@ function hriInit(currentState) {
     return
 }
 
-function generateLayout(uploaded=false,hri_data=null) {
+function generateLayout(uploaded=false,hriData=null) {
     if (uploaded === false) {
         return [];
     } else {
-      let hri_length = hri_data.length;
+      let hri_length = hriData.length;
       return _.map(_.range(0, hri_length), function(item, i) {
           return {
           x: 5,
