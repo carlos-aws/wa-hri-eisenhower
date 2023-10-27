@@ -1,17 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
-import {copyToClipboard, replaceHtmlTags} from './utils/utilities';
-import Button from '@cloudscape-design/components/button';
-import Container from "@cloudscape-design/components/container";
-import SpaceBetween from "@cloudscape-design/components/space-between";
-import Header from "@cloudscape-design/components/header";
-import Tabs from "@cloudscape-design/components/tabs";
-import Badge from "@cloudscape-design/components/badge";
-import Modal from "@cloudscape-design/components/modal";
-import Link from "@cloudscape-design/components/link";
-import Box from "@cloudscape-design/components/box";
-import Table from "@cloudscape-design/components/table";
+import { copyToClipboard, replaceHtmlTags } from './utils/utilities';
+import { Button, Container, SpaceBetween, Header, Tabs, Badge, 
+  Modal, Link, Box, Table, TextFilter, Pagination, CollectionPreferences } from "@cloudscape-design/components";
+import { useCollection } from '@cloudscape-design/collection-hooks';
+import { fullColumnDefinitions, getMatchesCountText, paginationLabels, collectionPreferencesProps } from './utils/full-table-config';
 import '@cloudscape-design/global-styles/index.css';
 import '/node_modules/react-grid-layout/css/styles.css';
 import '/node_modules/react-resizable/css/styles.css';
@@ -19,7 +13,7 @@ import './example-styles.css';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
-class HriDetails extends React.Component {
+class RisksDetails extends React.Component {
   constructor () {
     super();
     this.state = {
@@ -40,7 +34,6 @@ class HriDetails extends React.Component {
   
   render () {
     const bp_url = 'https://docs.aws.amazon.com/wellarchitected/latest/framework/' + this.props.data.WABestPracticeId + '.html'
-
     return (
       <div>
         <Button variant="inline-link" onClick={this.handleOpenModal}>More details</Button>
@@ -115,15 +108,127 @@ class HriDetails extends React.Component {
   }
 }
 
+export function CollectionHooksTable({ data }) {
+  const [preferences, setPreferences] = useState({ pageSize: 10, visibleContent: ['name', 'description', 'bestPractice', 'pillar', 'businessRisk', 'resourceId'] });
+  const { items, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
+    (data) ? data : [],
+    {
+      filtering: {
+        empty: <Box
+                  margin={{ vertical: "xs" }}
+                  textAlign="center"
+                  color="inherit"
+                >
+                  <SpaceBetween size="m">
+                    <b>No data</b>
+                  </SpaceBetween>
+                </Box>,
+        noMatch: "No matches",
+      },
+      pagination: { pageSize: preferences.pageSize },
+      sorting: {},
+    }
+  );
+  return (
+    <Table
+      {...collectionProps}
+      columnDefinitions={fullColumnDefinitions}
+      visibleColumns={preferences.visibleContent}
+      wrapLines
+      stickyHeader
+      items={items}
+      pagination={<Pagination {...paginationProps} ariaLabels={paginationLabels} />}
+      filter={
+        <TextFilter
+          {...filterProps}
+          countText={getMatchesCountText(filteredItemsCount)}
+          filteringAriaLabel="Filter data"
+        />
+      }
+      preferences={
+        <CollectionPreferences
+          {...collectionPreferencesProps}
+          preferences={preferences}
+          onConfirm={({ detail }) => setPreferences(detail)}
+        />
+      }
+    />
+  );
+}
+
+class RisksFullTable extends React.Component {
+  constructor () {
+    super();
+    this.state = {
+      showModal: false
+    };
+    
+    this.handleOpenModal = this.handleOpenModal.bind(this);
+    this.handleCloseModal = this.handleCloseModal.bind(this);
+  }
+  
+  handleOpenModal () {
+    this.setState({ showModal: true });
+  }
+  
+  handleCloseModal () {
+    this.setState({ showModal: false });
+  }
+  
+  render () {
+    return (
+      <div>
+        <Button 
+          variant="normal" 
+          onClick={this.handleOpenModal}
+          disabled={this.props.data === null}
+        >
+            Risks Table
+        </Button>
+        <Modal
+            size={'max'}
+            expandToFit={true}
+            header='Risks'
+            footer={
+              <Box float="right">
+                <SpaceBetween direction="horizontal" size="xs">
+                  <Button iconName="copy" variant="normal" onClick={() => copyToClipboard(JSON.stringify(this.props.data, undefined, 4))}>Copy</Button>
+                </SpaceBetween>
+              </Box>
+            }
+            visible={this.state.showModal}
+            onDismiss={this.handleCloseModal}
+        >
+          <CollectionHooksTable data={this.props.data} />                
+        </Modal>
+      </div>
+    );
+  }
+}
+
 class ToolBoxItem extends React.Component {
   render() {
-    return (
-      // <div className="toolbox__items__item">
-        <Button iconName="add-plus" variant="normal" onClick={this.props.onTakeItem.bind(undefined, this.props.item)}>
-          {parseInt(this.props.item.i) + 1} - {this.props.hriData[this.props.item.i].TrustedAdvisorCheckName}
+    if (this.props.urgency === 'high') {
+      return (
+        <Button iconName="status-warning" variant="normal" onClick={this.props.onTakeItem.bind(undefined, this.props.item)}>
+          [{parseInt(this.props.item.i) + 1}] {this.props.risksData[this.props.item.i].TrustedAdvisorCheckName} ({this.props.risksData[this.props.item.i].resourceId})
         </Button>
-      // </div>
-    );
+      );
+    }
+    if (this.props.urgency === 'medium') {
+      return (
+        <Button iconName="status-stopped" variant="normal" onClick={this.props.onTakeItem.bind(undefined, this.props.item)}>
+          [{parseInt(this.props.item.i) + 1}] {this.props.risksData[this.props.item.i].TrustedAdvisorCheckName} ({this.props.risksData[this.props.item.i].resourceId})
+        </Button>
+      );
+    }
+    if (this.props.urgency === 'low') {
+      return (
+        <Button iconName="status-pending" variant="normal" onClick={this.props.onTakeItem.bind(undefined, this.props.item)}>
+          [{parseInt(this.props.item.i) + 1}] {this.props.risksData[this.props.item.i].TrustedAdvisorCheckName} ({this.props.risksData[this.props.item.i].resourceId})
+        </Button>
+      );
+    }
   }
 }
 
@@ -142,13 +247,13 @@ export default class ToolboxLayout extends React.Component {
     mounted: false,
     layouts: { lg: this.props.initialLayout },
     toolbox: { lg: [] },
-    hriData: null,
+    risksData: null,
     activeTab: 'highUrgency'
   };
 
   componentDidMount() {
     this.setState({ mounted: true });
-    hriInit(this);
+    risksInit(this);
   }
 
   generateDOM() {
@@ -158,11 +263,13 @@ export default class ToolboxLayout extends React.Component {
           <Container
             disableContentPaddings
             disableHeaderPaddings
+            description='test'
             header={
               <Header
                 variant="h3"
+                description={this.state.risksData[l.i].resourceId}
               >
-                {parseInt(l.i) + 1} - {this.state.hriData[l.i].TrustedAdvisorCheckName}<HriDetails data={this.state.hriData[l.i]}/>
+                [{parseInt(l.i) + 1}] {this.state.risksData[l.i].TrustedAdvisorCheckName}<RisksDetails data={this.state.risksData[l.i]}/>
               </Header>
             }
           >
@@ -233,20 +340,21 @@ export default class ToolboxLayout extends React.Component {
     this.setState({
       layouts: { lg: [] },
       toolbox: { lg: [] },
-      hriData: null
+      risksData: null
     });
   }
 
-  expandFlaggedResources = (hriData) => {
-    let expandedHriData = [];
-    for (let i = 0; i < hriData.length; i++) {
-      for (let n = 0; n < hriData[i].FlaggedResources.length; n++) {
-        let tmpHriObject = JSON.parse(JSON.stringify(hriData[i]))
-        tmpHriObject.FlaggedResources = hriData[i].FlaggedResources[n]
-        expandedHriData.push(tmpHriObject);
+  expandFlaggedResources = (risksData) => {
+    let expandedRisksData = [];
+    for (let i = 0; i < risksData.length; i++) {
+      for (let n = 0; n < risksData[i].FlaggedResources.length; n++) {
+        let tmpRisksObject = JSON.parse(JSON.stringify(risksData[i]));
+        tmpRisksObject.FlaggedResources = risksData[i].FlaggedResources[n];
+        tmpRisksObject.resourceId = (risksData[i].FlaggedResources[n].metadata) ? risksData[i].FlaggedResources[n].metadata.join(", ") : '';
+        expandedRisksData.push(tmpRisksObject);
       }
     }
-    return expandedHriData
+    return expandedRisksData
   }
 
   uploadFile = (event) => {
@@ -257,13 +365,13 @@ export default class ToolboxLayout extends React.Component {
       let fileReader = new FileReader(); 
       fileReader.readAsText(file); 
       fileReader.onload = () => {
-        let expandedHriData = this.expandFlaggedResources(JSON.parse(fileReader.result));
-        let layout = generateLayout(true, expandedHriData);
+        let expandedRisksData = this.expandFlaggedResources(JSON.parse(fileReader.result));
+        let layout = generateLayout(true, expandedRisksData);
         this.setState({
           layouts: { lg: layout },
-          hriData: expandedHriData
+          risksData: expandedRisksData
         });
-        hriInit(this);
+        risksInit(this);
       }; 
       fileReader.onerror = () => {
         console.log(fileReader.error);
@@ -271,13 +379,14 @@ export default class ToolboxLayout extends React.Component {
     }
   }
 
-  renderToolBoxItems = (items) => {
+  renderToolBoxItems = (items, urgency) => {
     return (items.map(item => (
       <ToolBoxItem
         key={item.i}
         item={item}
         onTakeItem={this.onTakeItem}
-        hriData={this.state.hriData}
+        risksData={this.state.risksData}
+        urgency={urgency}
       />
     )))
   }
@@ -285,7 +394,7 @@ export default class ToolboxLayout extends React.Component {
   getHighUrgencyItems = (items) => {
     let highUrgencyItems = [];
     for (let i = 0; i < items.length; i++) {
-      if (this.state.hriData[items[i].i].FlaggedResources.status === 'error') {
+      if (this.state.risksData[items[i].i].FlaggedResources.status === 'error') {
         highUrgencyItems.push(items[i]);
       }
     }
@@ -295,7 +404,7 @@ export default class ToolboxLayout extends React.Component {
   getMediumUrgencyItems = (items) => {
     let mediumUrgencyItems = [];
     for (let i = 0; i < items.length; i++) {
-      if (this.state.hriData[items[i].i].FlaggedResources.status === 'warning') {
+      if (this.state.risksData[items[i].i].FlaggedResources.status === 'warning') {
         mediumUrgencyItems.push(items[i]);
       }
     }
@@ -305,7 +414,7 @@ export default class ToolboxLayout extends React.Component {
   getLowUrgencyItems = (items) => {
     let lowUrgencyItems = [];
     for (let i = 0; i < items.length; i++) {
-      if (this.state.hriData[items[i].i].FlaggedResources.status === 'ok') {
+      if (this.state.risksData[items[i].i].FlaggedResources.status === 'ok') {
         lowUrgencyItems.push(items[i]);
       }
     }
@@ -329,7 +438,8 @@ export default class ToolboxLayout extends React.Component {
                   direction="horizontal"
                   size="xs"
                 >
-                  <Button iconName={"upload"}>
+                  <RisksFullTable data={this.state.risksData}/>
+                  <Button variant="primary" iconName={"upload"}>
                     <input className="inputButton hidden" type={"file"} accept={".json"} onChange={this.uploadFile} />
                     Upload json file
                   </Button>
@@ -345,17 +455,17 @@ export default class ToolboxLayout extends React.Component {
               {
                   label: <div>High Urgency <Badge color="red">{highUrgencyItems.length}</Badge></div>,
                   id: 'highUrgency',
-                  content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(highUrgencyItems)}</SpaceBetween></div>
+                  content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(highUrgencyItems, 'high')}</SpaceBetween></div>
               },
               {
                 label: <div>Medium Urgency <Badge color="grey">{mediumUrgencyItems.length}</Badge></div>,
                 id: 'mediumUrgency',
-                content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(mediumUrgencyItems)}</SpaceBetween></div>
+                content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(mediumUrgencyItems, 'medium')}</SpaceBetween></div>
               },
               {
                 label: <div>Low Urgency <Badge color="green">{lowUrgencyItems.length}</Badge></div>,
                 id: 'lowUrgency',
-                content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(lowUrgencyItems)}</SpaceBetween></div>
+                content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(lowUrgencyItems, 'low')}</SpaceBetween></div>
               }
             ]}
             activeTabId={this.state.activeTab}
@@ -371,7 +481,7 @@ export default class ToolboxLayout extends React.Component {
         <div className="xAxisLeft">High Urgency</div>
         <div className="xAxisRight">Low Urgency</div>
         <div className="verticalLine"></div>
-        <hr width="100%" color="black" className="horizontalLine"></hr>
+        <hr width="100%" color="gray" className="horizontalLine"></hr>
         <ResponsiveReactGridLayout
           {...this.props}
           layouts={this.state.layouts}
@@ -390,7 +500,7 @@ export default class ToolboxLayout extends React.Component {
   }
 }
 
-function hriInit(currentState) {
+function risksInit(currentState) {
     currentState.setState(prevState => {
         return {
           toolbox: {
@@ -410,12 +520,12 @@ function hriInit(currentState) {
     return
 }
 
-function generateLayout(uploaded=false,hriData=null) {
+function generateLayout(uploaded=false,risksData=null) {
     if (uploaded === false) {
         return [];
     } else {
-      let hri_length = hriData.length;
-      return _.map(_.range(0, hri_length), function(item, i) {
+      let risksLength = risksData.length;
+      return _.map(_.range(0, risksLength), function(item, i) {
           return {
           x: 5,
           y: 9,

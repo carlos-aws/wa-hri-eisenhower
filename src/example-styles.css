@@ -10,8 +10,8 @@ body {
   }
   .verticalLine {
     position: absolute;
-    background-color: rgb(0, 0, 0);
-    width: 2px;
+    background-color: gray;
+    width: 3px;
     top: 290px;
     bottom: 0%;
     left: 50%;
