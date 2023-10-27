@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import { copyToClipboard, replaceHtmlTags } from './utils/utilities';
-import { Button, Container, SpaceBetween, Header, Tabs, Badge, 
+import { Button, Container, SpaceBetween, Header, Tabs, Badge, Icon,
   Modal, Link, Box, Table, TextFilter, Pagination, CollectionPreferences } from "@cloudscape-design/components";
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { fullColumnDefinitions, getMatchesCountText, paginationLabels, collectionPreferencesProps } from './utils/full-table-config';
@@ -263,17 +263,17 @@ export default class ToolboxLayout extends React.Component {
           <Container
             disableContentPaddings
             disableHeaderPaddings
-            description='test'
             header={
               <Header
                 variant="h3"
                 description={this.state.risksData[l.i].resourceId}
               >
-                [{parseInt(l.i) + 1}] {this.state.risksData[l.i].TrustedAdvisorCheckName}<RisksDetails data={this.state.risksData[l.i]}/>
+                <Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>
+                [{parseInt(l.i) + 1}] {this.state.risksData[l.i].TrustedAdvisorCheckName}
               </Header>
             }
           >
-            <Button variant="normal" onClick={this.onPutItem.bind(this, l)}>Close</Button>
+            <RisksDetails data={this.state.risksData[l.i]}/>
           </Container>
         </div>
       );
