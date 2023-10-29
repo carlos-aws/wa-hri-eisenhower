@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import { copyToClipboard, replaceHtmlTags } from './utils/utilities';
-import { Button, Container, SpaceBetween, Header, Tabs, Badge, Icon,
+import { Button, Container, SpaceBetween, Header, Tabs, Badge, Popover, StatusIndicator,
   Modal, Link, Box, Table, TextFilter, Pagination, CollectionPreferences } from "@cloudscape-design/components";
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { fullColumnDefinitions, getMatchesCountText, paginationLabels, collectionPreferencesProps } from './utils/full-table-config';
@@ -44,7 +44,19 @@ class RisksDetails extends React.Component {
             footer={
               <Box float="right">
                 <SpaceBetween direction="horizontal" size="xs">
-                  <Button iconName="copy" variant="normal" onClick={() => copyToClipboard(JSON.stringify(this.props.data, undefined, 4))}>Copy</Button>
+                  <Popover
+                    dismissButton={false}
+                    position="top"
+                    size="small"
+                    triggerType="custom"
+                    content={
+                      <StatusIndicator type="success">
+                        Raw json copied
+                      </StatusIndicator>
+                    }
+                  >
+                    <Button iconName="copy" variant="normal" onClick={() => copyToClipboard(JSON.stringify(this.props.data, undefined, 4))}>Copy</Button>
+                  </Popover>
                 </SpaceBetween>
               </Box>
             }
@@ -192,7 +204,20 @@ class RisksFullTable extends React.Component {
             footer={
               <Box float="right">
                 <SpaceBetween direction="horizontal" size="xs">
-                  <Button iconName="copy" variant="normal" onClick={() => copyToClipboard(JSON.stringify(this.props.data, undefined, 4))}>Copy</Button>
+                  <Popover
+                      dismissButton={false}
+                      position="top"
+                      size="small"
+                      triggerType="custom"
+                      renderWithPortal
+                      content={
+                        <StatusIndicator type="success">
+                          Raw json copied
+                        </StatusIndicator>
+                      }
+                  >
+                    <Button iconName="copy" variant="normal" onClick={() => copyToClipboard(JSON.stringify(this.props.data, undefined, 4))}>Copy</Button>
+                  </Popover>
                 </SpaceBetween>
               </Box>
             }
