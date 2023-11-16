@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import { copyToClipboard, replaceHtmlTags } from './utils/utilities';
-import { Button, Container, SpaceBetween, Header, Tabs, Badge, Popover, StatusIndicator,
-  Modal, Link, Box, Table, TextFilter, Pagination, CollectionPreferences } from "@cloudscape-design/components";
+import { Button, Container, SpaceBetween, Header, Tabs, Badge, Popover, StatusIndicator, SegmentedControl,
+  Modal, Link, Box, Table, TextFilter, Pagination, CollectionPreferences, PropertyFilter } from "@cloudscape-design/components";
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { fullColumnDefinitions, getMatchesCountText, paginationLabels, collectionPreferencesProps } from './utils/full-table-config';
+import { toolboxGetMatchesCountText, toolboxPaginationLabels, toolboxCollectionPreferencesProps,
+  toolboxFilteringProperties, propertyFilterI18nStrings, TableEmptyState, TableNoMatchState } from './utils/toolbox-table-config';
 import '@cloudscape-design/global-styles/index.css';
 import '/node_modules/react-grid-layout/css/styles.css';
 import '/node_modules/react-resizable/css/styles.css';
@@ -168,6 +170,203 @@ export function CollectionHooksTable({ data }) {
   );
 }
 
+function toolboxCreateLabelFunction(columnName) {
+  return ({ sorted, descending }) => {
+    const sortState = sorted ? `sorted ${descending ? 'descending' : 'ascending'}` : 'not sorted';
+    return `${columnName}, ${sortState}.`;
+  };
+}
+
+export function CollectionHooksTableToolbox({ data, toolboxItems, onTakeItem, risksData, uploadFile, segmentsControl, activeSegment }) {
+  for (let i = 0; i < toolboxItems.length; i++) {
+    toolboxItems[i].TrustedAdvisorCheckId = data[i].TrustedAdvisorCheckId;
+    toolboxItems[i].TrustedAdvisorCheckName = data[i].TrustedAdvisorCheckName;
+    toolboxItems[i].TrustedAdvisorCheckDesc = data[i].TrustedAdvisorCheckDesc;
+    toolboxItems[i].WAPillarId = data[i].WAPillarId;
+    toolboxItems[i].WAQuestionId = data[i].WAQuestionId;
+    toolboxItems[i].WABestPracticeId = data[i].WABestPracticeId;
+    toolboxItems[i].WABestPracticeTitle = data[i].WABestPracticeTitle;
+    toolboxItems[i].WABestPracticeDesc = data[i].WABestPracticeDesc;
+    toolboxItems[i].WABestPracticeRisk = data[i].WABestPracticeRisk;
+    toolboxItems[i].resourceId = data[i].resourceId;
+    toolboxItems[i].resultStatus = data[i].FlaggedResources.status;
+    toolboxItems[i].region = data[i].FlaggedResources.region;
+  }
+  const [selectedItems, setSelectedItems] = useState([]);
+
+  const [preferences, setPreferences] = useState({ pageSize: 10, visibleContent: ['name', 'pillar', 'businessRisk', 'resourceId', 'region'] });
+  const { items, actions, filteredItemsCount, collectionProps, propertyFilterProps, paginationProps } = useCollection(
+    (toolboxItems) ? toolboxItems : [],
+    {
+      propertyFiltering: {
+        filteringProperties: toolboxFilteringProperties,
+        empty: <TableEmptyState resourceName="data" />,
+        noMatch: (
+          <TableNoMatchState
+            onClearFilter={() => {
+              actions.setPropertyFiltering({ tokens: [], operation: 'and' });
+            }}
+          />
+        ),
+      },
+      pagination: { pageSize: preferences.pageSize },
+      sorting: {},
+      selection: { keepSelection: true },
+    }
+  );
+
+  const toolboxFullColumnDefinitions = [
+    {
+      id: "name",
+      header: "Name",
+      cell: (item) => <Button variant="normal" onClick={onTakeItem.bind(undefined, item)}>
+                [{parseInt(item.i) + 1}] {item.TrustedAdvisorCheckName}
+        </Button> || "-",
+      ariaLabel: toolboxCreateLabelFunction('Name'),
+      sortingField: 'name'
+    },
+    {
+      id: "description",
+      header: "Description",
+      cell: (item) => <span>{replaceHtmlTags(item.TrustedAdvisorCheckDesc)}</span> || "-",
+      ariaLabel: toolboxCreateLabelFunction('Description'),
+      sortingField: 'description'
+    },
+    {
+      id: "bestPractice",
+      header: "Best Practice",
+      cell: (item) => (
+        <Link external href={'https://docs.aws.amazon.com/wellarchitected/latest/framework/' + item.WABestPracticeId + '.html'}>{item.WABestPracticeTitle || "-"}</Link>
+      ),
+      ariaLabel: toolboxCreateLabelFunction('Best Practice'),
+      sortingField: 'bestPractice'
+    },
+    {
+      id: "pillar",
+      header: "Pillar",
+      cell: (item) => item.WAPillarId || "-",
+      ariaLabel: toolboxCreateLabelFunction('Pillar'),
+      sortingField: 'pillar'
+    },
+    {
+      id: "businessRisk",
+      header: "Business Risk",
+      cell: (item) => item.WABestPracticeRisk || "-",
+      ariaLabel: toolboxCreateLabelFunction('Business Risk'),
+      sortingField: 'businessRisk'
+    },
+    {
+      id: "taCheckStatus",
+      header: "Trusted Advisor Check Status",
+      cell: (item) => item.resultStatus || "-",
+      ariaLabel: toolboxCreateLabelFunction('Trusted Advisor Check Status'),
+      sortingField: 'taCheckStatus'
+    },
+    {
+        id: "resourceId",
+        header: "Resource at Risk",
+        cell: (item) => item.resourceId || "-",
+        ariaLabel: toolboxCreateLabelFunction('Resource at Risk'),
+        sortingField: 'resourceId'
+    },
+    {
+      id: "resourceRaw",
+      header: "Resource at Risk (Raw)",
+      cell: (item) => JSON.stringify(item.FlaggedResources, null, 4) || "-",
+      ariaLabel: toolboxCreateLabelFunction('Resource at Risk (Raw)'),
+      sortingField: 'resourceRaw'
+    },
+    {
+      id: "region",
+      header: "Region",
+      cell: (item) => item.region || "-",
+      ariaLabel: toolboxCreateLabelFunction('Region'),
+      sortingField: 'resourceRaw'
+    },
+  ];
+
+  return (
+    <Table
+      {...collectionProps}
+      columnDefinitions={toolboxFullColumnDefinitions}
+      visibleColumns={preferences.visibleContent}
+      selectionType="multi"
+      selectedItems={selectedItems}
+      onSelectionChange={evt => setSelectedItems(evt.detail.selectedItems)}
+      wrapLines
+      stickyHeader
+      items={items}
+      contentDensity="comfortable"
+      pagination={<Pagination {...paginationProps} ariaLabels={toolboxPaginationLabels} />}
+      filter={
+        <PropertyFilter
+          {...propertyFilterProps}
+          i18nStrings={propertyFilterI18nStrings}
+          countText={toolboxGetMatchesCountText(filteredItemsCount)}
+          expandToViewport={true}
+        />
+      }
+      preferences={
+        <CollectionPreferences
+          {...toolboxCollectionPreferencesProps}
+          preferences={preferences}
+          onConfirm={({ detail }) => setPreferences(detail)}
+        />
+      }
+      header={
+        <Header
+          variant="h2"
+          actions={
+            <SpaceBetween
+              direction="horizontal"
+              size="xs"
+            >
+              <Button 
+                disabled={selectedItems.length === 0}
+                onClick={() => {
+                    for (let i = 0; i < selectedItems.length; i++) {
+                      onTakeItem.bind(undefined, selectedItems[i])()
+                    }
+                    setSelectedItems([]);
+                }}
+              >
+                Add all selected {selectedItems.length && filteredItemsCount
+                  ? "(" + selectedItems.length + "/" + filteredItemsCount + ")"
+                  : selectedItems.length ? "(" + selectedItems.length + "/" + toolboxItems.length + ")"
+                  : filteredItemsCount ? "(" + filteredItemsCount + ")"
+                  : "(" + toolboxItems.length + ")"}
+              </Button>
+              <RisksFullTable data={risksData}/>
+              <Button variant="primary" iconName={"upload"}>
+                <input className="inputButton hidden" type={"file"} accept={".json"} onChange={uploadFile} />
+                Upload json file
+              </Button>
+            </SpaceBetween>
+          }
+        >
+          <SpaceBetween
+                  direction="horizontal"
+                  size="xs"
+                >
+                  Trusted Advisor Checks 
+                  {<SegmentedControl
+                    selectedId={activeSegment}
+                    onChange={(e) => {
+                      segmentsControl.bind(undefined, e)();
+                    }}
+                    label="Default segmented control"
+                    options={[
+                      { text: "Table", id: "table" },
+                      { text: "Container", id: "container" }
+                    ]}
+                  />}
+            </SpaceBetween>
+        </Header>
+      }
+    />
+  );
+}
+
 class RisksFullTable extends React.Component {
   constructor () {
     super();
@@ -224,7 +423,7 @@ class RisksFullTable extends React.Component {
             visible={this.state.showModal}
             onDismiss={this.handleCloseModal}
         >
-          <CollectionHooksTable data={this.props.data} />                
+          <CollectionHooksTable data={this.props.data} />
         </Modal>
       </div>
     );
@@ -273,13 +472,20 @@ export default class ToolboxLayout extends React.Component {
     layouts: { lg: this.props.initialLayout },
     toolbox: { lg: [] },
     risksData: null,
-    activeTab: 'highUrgency'
+    activeTab: 'highUrgency',
+    toolboxTableView: true,
+    activeSegment: 'table'
   };
 
   componentDidMount() {
     this.setState({ mounted: true });
     risksInit(this);
   }
+
+  buttonsList = [
+    { onClick: ()=> alert('clicked icon1') },
+    { onClick: ()=> alert('clicked icon2') },
+  ]
 
   generateDOM() {
     return _.map(this.state.layouts[this.state.currentBreakpoint], l => {
@@ -446,13 +652,19 @@ export default class ToolboxLayout extends React.Component {
     return lowUrgencyItems
   }
 
+  segmentsControl = (event) => {
+    const newSegment = event.detail.selectedId;
+    this.setState({ activeSegment: newSegment });
+    this.setState({ toolboxTableView: event.detail.selectedId === 'table' ? true : false });
+  }
+
   render() {
     let highUrgencyItems = this.getHighUrgencyItems(this.state.toolbox[this.state.currentBreakpoint] || []);
     let mediumUrgencyItems = this.getMediumUrgencyItems(this.state.toolbox[this.state.currentBreakpoint] || []);
     let lowUrgencyItems = this.getLowUrgencyItems(this.state.toolbox[this.state.currentBreakpoint] || []);
     return (
       <div>
-        <Container
+        { !this.state.toolboxTableView ? <Container
           fitHeight={true}
           disableContentPaddings
           header={
@@ -471,7 +683,23 @@ export default class ToolboxLayout extends React.Component {
                 </SpaceBetween>
               }
             >
-              Trusted Advisor Checks
+              <SpaceBetween
+                  direction="horizontal"
+                  size="xs"
+                >
+                  Trusted Advisor Checks 
+                  {<SegmentedControl
+                    selectedId={this.state.activeSegment}
+                    onChange={(e) => {
+                      this.segmentsControl(e)
+                    }}
+                    label="Default segmented control"
+                    options={[
+                      { text: "Table", id: "table" },
+                      { text: "Container", id: "container" }
+                    ]}
+                  />}
+              </SpaceBetween>
             </Header>
           }
         >
@@ -499,8 +727,10 @@ export default class ToolboxLayout extends React.Component {
               this.setState({ activeTab: newTab });
             }}
           />
-        </Container>
-        
+        </Container> : 
+        <div className="toolbox-tableview"><CollectionHooksTableToolbox data={this.state.risksData} toolboxItems={this.state.toolbox[this.state.currentBreakpoint] || []} onTakeItem={this.onTakeItem} risksData={this.state.risksData} uploadFile={this.uploadFile} segmentsControl={this.segmentsControl} activeSegment={this.state.activeSegment}/></div>
+        }
+
         <div className="yAxisTop">High Impact</div>
         <div className="yAxisBottom">Low Impact</div>
         <div className="xAxisLeft">High Urgency</div>
