@@ -177,21 +177,7 @@ function toolboxCreateLabelFunction(columnName) {
   };
 }
 
-export function CollectionHooksTableToolbox({ data, toolboxItems, onTakeItem, risksData, uploadFile, segmentsControl, activeSegment }) {
-  for (let i = 0; i < toolboxItems.length; i++) {
-    toolboxItems[i].TrustedAdvisorCheckId = data[i].TrustedAdvisorCheckId;
-    toolboxItems[i].TrustedAdvisorCheckName = data[i].TrustedAdvisorCheckName;
-    toolboxItems[i].TrustedAdvisorCheckDesc = data[i].TrustedAdvisorCheckDesc;
-    toolboxItems[i].WAPillarId = data[i].WAPillarId;
-    toolboxItems[i].WAQuestionId = data[i].WAQuestionId;
-    toolboxItems[i].WABestPracticeId = data[i].WABestPracticeId;
-    toolboxItems[i].WABestPracticeTitle = data[i].WABestPracticeTitle;
-    toolboxItems[i].WABestPracticeDesc = data[i].WABestPracticeDesc;
-    toolboxItems[i].WABestPracticeRisk = data[i].WABestPracticeRisk;
-    toolboxItems[i].resourceId = data[i].resourceId;
-    toolboxItems[i].resultStatus = data[i].FlaggedResources.status;
-    toolboxItems[i].region = data[i].FlaggedResources.region;
-  }
+export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksData, uploadFile, segmentsControl, activeSegment }) {
   const [selectedItems, setSelectedItems] = useState([]);
 
   const [preferences, setPreferences] = useState({ pageSize: 10, visibleContent: ['name', 'pillar', 'businessRisk', 'taCheckStatus', 'resourceId'] });
@@ -289,7 +275,14 @@ export function CollectionHooksTableToolbox({ data, toolboxItems, onTakeItem, ri
       header: "Region",
       cell: (item) => item.region || "-",
       ariaLabel: toolboxCreateLabelFunction('Region'),
-      sortingField: 'resourceRaw'
+      sortingField: 'region'
+    },
+    {
+      id: "uniqueId",
+      header: "UniqueId",
+      cell: (item) => item.uniqueId || "-",
+      ariaLabel: toolboxCreateLabelFunction('UniqueId'),
+      sortingField: 'uniqueId'
     },
   ];
 
@@ -304,7 +297,9 @@ export function CollectionHooksTableToolbox({ data, toolboxItems, onTakeItem, ri
       wrapLines
       resizableColumns
       stickyHeader
+      variant="container"
       items={items}
+      trackBy="uniqueId"
       contentDensity="comfortable"
       pagination={<Pagination {...paginationProps} ariaLabels={toolboxPaginationLabels} />}
       filter={
@@ -365,8 +360,8 @@ export function CollectionHooksTableToolbox({ data, toolboxItems, onTakeItem, ri
                     }}
                     label="Default segmented control"
                     options={[
-                      { text: "Table", id: "table" },
-                      { text: "Container", id: "container" }
+                      { text: "Table view", id: "table" },
+                      { text: "Container view", id: "container" }
                     ]}
                   />}
             </SpaceBetween>
@@ -506,14 +501,24 @@ export default class ToolboxLayout extends React.Component {
             header={
               <Header
                 variant="h3"
-                description={this.state.risksData[l.i].resourceId}
               >
-                <Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>
-                [{parseInt(l.i) + 1}] {this.state.risksData[l.i].TrustedAdvisorCheckName}
+                {this.state.risksData[l.i].FlaggedResources.status === 'error' ? <Box variant="h3" color="text-status-error"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>[{parseInt(l.i) + 1}]{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
+                  : this.state.risksData[l.i].FlaggedResources.status === 'warning' ? <Box variant="h3" color="text-status-warning"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>[{parseInt(l.i) + 1}]{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
+                  : this.state.risksData[l.i].FlaggedResources.status === 'ok' ? <Box variant="h3" color="text-status-success"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>[{parseInt(l.i) + 1}]{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
+                  : "-"}
               </Header>
             }
           >
-            <RisksDetails data={this.state.risksData[l.i]}/>
+            <SpaceBetween
+              alignItems="center"
+              direction="vertical"
+              size="xs"
+            >
+              <Box variant="p">
+                {this.state.risksData[l.i].resourceId}
+              </Box>
+              <RisksDetails data={this.state.risksData[l.i]}/>
+            </SpaceBetween>
           </Container>
         </div>
       );
@@ -591,6 +596,7 @@ export default class ToolboxLayout extends React.Component {
         let tmpRisksObject = JSON.parse(JSON.stringify(risksData[i]));
         tmpRisksObject.FlaggedResources = risksData[i].FlaggedResources[n];
         tmpRisksObject.resourceId = (risksData[i].FlaggedResources[n].metadata) ? risksData[i].FlaggedResources[n].metadata.join(", ") : '';
+        tmpRisksObject.uniqueId = risksData[i].TrustedAdvisorCheckId + "_" + risksData[i].FlaggedResources[n].resourceId
         expandedRisksData.push(tmpRisksObject);
       }
     }
@@ -704,8 +710,8 @@ export default class ToolboxLayout extends React.Component {
                     }}
                     label="Default segmented control"
                     options={[
-                      { text: "Table", id: "table" },
-                      { text: "Container", id: "container" }
+                      { text: "Table view", id: "table" },
+                      { text: "Container view", id: "container" }
                     ]}
                   />}
               </SpaceBetween>
@@ -740,7 +746,7 @@ export default class ToolboxLayout extends React.Component {
             fitHeight={false}
             disableContentPaddings
           >
-            <div className="toolbox-tableview"><CollectionHooksTableToolbox data={this.state.risksData} toolboxItems={this.state.toolbox[this.state.currentBreakpoint] || []} onTakeItem={this.onTakeItem} risksData={this.state.risksData} uploadFile={this.uploadFile} segmentsControl={this.segmentsControl} activeSegment={this.state.activeSegment}/></div>
+            <div className="toolbox-tableview"><CollectionHooksTableToolbox toolboxItems={this.state.toolbox[this.state.currentBreakpoint] || []} onTakeItem={this.onTakeItem} risksData={this.state.risksData} uploadFile={this.uploadFile} segmentsControl={this.segmentsControl} activeSegment={this.state.activeSegment}/></div>
         </Container>
         }
 
@@ -800,9 +806,21 @@ function generateLayout(uploaded=false,risksData=null) {
           w: 2,
           h: 3,
           i: i.toString(),
-          static: false
+          static: false,
+          TrustedAdvisorCheckId: risksData[i].TrustedAdvisorCheckId,
+          TrustedAdvisorCheckName: risksData[i].TrustedAdvisorCheckName,
+          TrustedAdvisorCheckDesc: risksData[i].TrustedAdvisorCheckDesc,
+          WAPillarId: risksData[i].WAPillarId,
+          WAQuestionId: risksData[i].WAQuestionId,
+          WABestPracticeId: risksData[i].WABestPracticeId,
+          WABestPracticeTitle: risksData[i].WABestPracticeTitle,
+          WABestPracticeDesc: risksData[i].WABestPracticeDesc,
+          WABestPracticeRisk: risksData[i].WABestPracticeRisk,
+          resourceId: risksData[i].resourceId,
+          resultStatus: risksData[i].FlaggedResources.status,
+          region: risksData[i].FlaggedResources.region,
+          uniqueId: risksData[i].uniqueId
           };
       });
     }
 }
-

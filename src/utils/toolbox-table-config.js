@@ -154,7 +154,9 @@ export const toolboxFilteringProperties = [
 export const propertyFilterI18nStrings = {
   filteringAriaLabel: "Find checks",
   filteringPlaceholder: "Find checks",
-  clearFiltersText: "Clear filters"
+  clearFiltersText: "Clear filters",
+  cancelActionText: 'Cancel',
+  applyActionText: 'Apply',
 };
 
 export const TableEmptyState = ({ resourceName }) => (
