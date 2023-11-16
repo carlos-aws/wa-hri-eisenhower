@@ -53,9 +53,9 @@ const toolboxFullColumnDefinitions = [
   },
   {
     id: "taCheckStatus",
-    header: "Trusted Advisor Check Status",
+    header: "Check Status",
     cell: (item) => item.resultStatus || "-",
-    ariaLabel: toolboxCreateLabelFunction('Trusted Advisor Check Status'),
+    ariaLabel: toolboxCreateLabelFunction('Check Status'),
     sortingField: 'taCheckStatus'
   },
   {
@@ -80,7 +80,7 @@ export const toolboxPaginationLabels = {
   previousPageLabel: 'Previous page',
 };
 
-const toolboxPageSizePreference = {
+const pageSizePreference = {
   title: 'Select page size',
   options: [
     { value: 10, label: '10 resources' },
@@ -88,7 +88,7 @@ const toolboxPageSizePreference = {
   ],
 };
 
-const toolboxVisibleContentPreference = {
+const visibleContentPreference = {
   title: 'Select visible content',
   options: [
     {
@@ -99,8 +99,8 @@ const toolboxVisibleContentPreference = {
 };
 
 export const toolboxCollectionPreferencesProps = {
-  toolboxPageSizePreference,
-  toolboxVisibleContentPreference,
+  pageSizePreference,
+  visibleContentPreference,
   cancelLabel: 'Cancel',
   confirmLabel: 'Confirm',
   title: 'Preferences',
@@ -132,9 +132,9 @@ export const toolboxFilteringProperties = [
     operators: [':', '!:', '=', '!=', '^'],
   },
   {
-    propertyLabel: 'Trusted Advisor Check Status',
+    propertyLabel: 'Check Status',
     key: 'resultStatus',
-    groupValuesLabel: 'Trusted Advisor Check Status values',
+    groupValuesLabel: 'Check Status values',
     operators: [':', '!:', '=', '!=', '^'],
   },
   {
@@ -160,7 +160,7 @@ export const propertyFilterI18nStrings = {
 export const TableEmptyState = ({ resourceName }) => (
   <Box margin={{ vertical: 'xs' }} textAlign="center" color="inherit">
     <SpaceBetween size="xxs">
-      <div>
+      <div style={{height: 70 + 'px'}}>
         <b>No {resourceName.toLowerCase()} loaded</b>
       </div>
     </SpaceBetween>

@@ -194,7 +194,7 @@ export function CollectionHooksTableToolbox({ data, toolboxItems, onTakeItem, ri
   }
   const [selectedItems, setSelectedItems] = useState([]);
 
-  const [preferences, setPreferences] = useState({ pageSize: 10, visibleContent: ['name', 'pillar', 'businessRisk', 'resourceId', 'region'] });
+  const [preferences, setPreferences] = useState({ pageSize: 10, visibleContent: ['name', 'pillar', 'businessRisk', 'taCheckStatus', 'resourceId'] });
   const { items, actions, filteredItemsCount, collectionProps, propertyFilterProps, paginationProps } = useCollection(
     (toolboxItems) ? toolboxItems : [],
     {
@@ -251,15 +251,23 @@ export function CollectionHooksTableToolbox({ data, toolboxItems, onTakeItem, ri
     {
       id: "businessRisk",
       header: "Business Risk",
-      cell: (item) => item.WABestPracticeRisk || "-",
+      cell: (item) => 
+        item.WABestPracticeRisk === 'High' ? <StatusIndicator type="error">{item.WABestPracticeRisk}</StatusIndicator>
+          : item.WABestPracticeRisk === 'Medium' ? <StatusIndicator type="warning">{item.WABestPracticeRisk}</StatusIndicator>
+          : item.WABestPracticeRisk === 'Low' ? <StatusIndicator type="info">{item.WABestPracticeRisk}</StatusIndicator>
+          : "-",
       ariaLabel: toolboxCreateLabelFunction('Business Risk'),
       sortingField: 'businessRisk'
     },
     {
       id: "taCheckStatus",
-      header: "Trusted Advisor Check Status",
-      cell: (item) => item.resultStatus || "-",
-      ariaLabel: toolboxCreateLabelFunction('Trusted Advisor Check Status'),
+      header: "Check Status",
+      cell: (item) => 
+        item.resultStatus === 'error' ? <StatusIndicator type="error">{item.resultStatus}</StatusIndicator>
+          : item.resultStatus === 'warning' ? <StatusIndicator type="warning">{item.resultStatus}</StatusIndicator>
+          : item.resultStatus === 'ok' ? <StatusIndicator type="success">{item.resultStatus}</StatusIndicator>
+          : "-",
+      ariaLabel: toolboxCreateLabelFunction('Check Status'),
       sortingField: 'taCheckStatus'
     },
     {
@@ -294,6 +302,7 @@ export function CollectionHooksTableToolbox({ data, toolboxItems, onTakeItem, ri
       selectedItems={selectedItems}
       onSelectionChange={evt => setSelectedItems(evt.detail.selectedItems)}
       wrapLines
+      resizableColumns
       stickyHeader
       items={items}
       contentDensity="comfortable"
@@ -346,9 +355,9 @@ export function CollectionHooksTableToolbox({ data, toolboxItems, onTakeItem, ri
         >
           <SpaceBetween
                   direction="horizontal"
-                  size="xs"
+                  size="xxl"
                 >
-                  Trusted Advisor Checks 
+                  <div>Trusted Advisor Checks </div>
                   {<SegmentedControl
                     selectedId={activeSegment}
                     onChange={(e) => {
@@ -685,9 +694,9 @@ export default class ToolboxLayout extends React.Component {
             >
               <SpaceBetween
                   direction="horizontal"
-                  size="xs"
+                  size="xxl"
                 >
-                  Trusted Advisor Checks 
+                  <div>Trusted Advisor Checks </div>
                   {<SegmentedControl
                     selectedId={this.state.activeSegment}
                     onChange={(e) => {
@@ -727,8 +736,12 @@ export default class ToolboxLayout extends React.Component {
               this.setState({ activeTab: newTab });
             }}
           />
-        </Container> : 
-        <div className="toolbox-tableview"><CollectionHooksTableToolbox data={this.state.risksData} toolboxItems={this.state.toolbox[this.state.currentBreakpoint] || []} onTakeItem={this.onTakeItem} risksData={this.state.risksData} uploadFile={this.uploadFile} segmentsControl={this.segmentsControl} activeSegment={this.state.activeSegment}/></div>
+        </Container> : <Container
+            fitHeight={false}
+            disableContentPaddings
+          >
+            <div className="toolbox-tableview"><CollectionHooksTableToolbox data={this.state.risksData} toolboxItems={this.state.toolbox[this.state.currentBreakpoint] || []} onTakeItem={this.onTakeItem} risksData={this.state.risksData} uploadFile={this.uploadFile} segmentsControl={this.segmentsControl} activeSegment={this.state.activeSegment}/></div>
+        </Container>
         }
 
         <div className="yAxisTop">High Impact</div>
