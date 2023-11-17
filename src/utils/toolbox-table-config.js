@@ -155,8 +155,15 @@ export const propertyFilterI18nStrings = {
   filteringAriaLabel: "Find checks",
   filteringPlaceholder: "Find checks",
   clearFiltersText: "Clear filters",
-  cancelActionText: 'Cancel',
-  applyActionText: 'Apply',
+  cancelActionText: "Cancel",
+  applyActionText: "Apply",
+  operationAndText: "and",
+  operationOrText: "or",
+  operatorContainsText: "Contains",
+  operatorDoesNotContainText: "Does not contain",
+  operatorEqualsText: "Equals",
+  operatorDoesNotEqualText: "Does not equal",
+  operatorStartsWithText: "Starts with",
 };
 
 export const TableEmptyState = ({ resourceName }) => (

@@ -13,7 +13,7 @@ body {
     position: absolute;
     background-color: gray;
     width: 3px;
-    top: 290px;
+    top: 8%;
     bottom: 0%;
     left: 50%;
     z-index: -1;
@@ -22,13 +22,13 @@ body {
     position: absolute;
     display: flex;
     flex-direction: row;
-    top: 63%;
+    top: 52%;
     z-index: -1;
   }
   /* High Impact */
   .yAxisTop {
     left: 48%;
-    top: 290px;
+    top: 8%;
     position: absolute;
     color: red;
     background-color: rgb(255, 255, 255);
@@ -45,8 +45,8 @@ body {
   }
   /* High Urgency */
   .xAxisLeft {
-    left: 2%;
-    bottom: 36.5%;
+    left: 1%;
+    bottom: 44.5%;
     position: absolute;
     color: red;
     background-color: rgb(255, 255, 255);
@@ -54,10 +54,46 @@ body {
   }
   /* Low Urgency */
   .xAxisRight {
-    left: 95%;
-    bottom: 36.5%;
+    left: 94%;
+    bottom: 44.5%;
     position: absolute;
     color: green;
+    background-color: rgb(255, 255, 255);
+    font-weight: bold;
+  }
+  /* Do it Now */
+  .doItNow {
+    left: 24%;
+    top: 30%;
+    position: absolute;
+    color: rgb(82, 82, 82);
+    background-color: rgb(255, 255, 255);
+    font-weight: bold;
+  }
+  /* Do it Next */
+  .doItNext {
+    left: 24%;
+    top: 75%;
+    position: absolute;
+    color: rgb(82, 82, 82);
+    background-color: rgb(255, 255, 255);
+    font-weight: bold;
+  }
+  /* Schedule it First */
+  .scheduleFirst {
+    left: 70%;
+    top: 30%;
+    position: absolute;
+    color: rgb(82, 82, 82);
+    background-color: rgb(255, 255, 255);
+    font-weight: bold;
+  }
+  /* Schedule it Last */
+  .scheduleLast {
+    left: 70%;
+    top: 75%;
+    position: absolute;
+    color: rgb(82, 82, 82);
     background-color: rgb(255, 255, 255);
     font-weight: bold;
   }

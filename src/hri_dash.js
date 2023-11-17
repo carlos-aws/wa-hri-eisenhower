@@ -15,6 +15,8 @@ import './example-styles.css';
 
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
+let newFileUpload = false;
+
 class RisksDetails extends React.Component {
   constructor () {
     super();
@@ -170,6 +172,23 @@ export function CollectionHooksTable({ data }) {
   );
 }
 
+function getRisksDataAsCSV(rawRisksData) {
+  const replacer = (key, value) => value === null ? '' : value;
+  const header = Object.keys(rawRisksData[0]);
+  const csvContent = 'data:text/csv;charset=utf-8,' + [
+    header.join(','),
+    ...rawRisksData.map(row => header.map(fieldName => {
+      if (fieldName === 'TrustedAdvisorCheckDesc') {
+        return(JSON.stringify(row[fieldName], replacer).replace(/,/g, ";").replace(/#/g, "%23"))
+      }
+      else {
+        return(JSON.stringify(row[fieldName], replacer).replace(/,/g, ";"))
+      }
+    }).join(','))
+  ].join('\r\n');
+  return (csvContent);
+}
+
 function toolboxCreateLabelFunction(columnName) {
   return ({ sorted, descending }) => {
     const sortState = sorted ? `sorted ${descending ? 'descending' : 'ascending'}` : 'not sorted';
@@ -177,10 +196,10 @@ function toolboxCreateLabelFunction(columnName) {
   };
 }
 
-export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksData, uploadFile, segmentsControl, activeSegment }) {
+export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyItemsCount }) {
   const [selectedItems, setSelectedItems] = useState([]);
 
-  const [preferences, setPreferences] = useState({ pageSize: 10, visibleContent: ['name', 'pillar', 'businessRisk', 'taCheckStatus', 'resourceId'] });
+  const [preferences, setPreferences] = useState({ pageSize: 25, visibleContent: ['name', 'pillar', 'businessRisk', 'taCheckStatus', 'resourceId'] });
   const { items, actions, filteredItemsCount, collectionProps, propertyFilterProps, paginationProps } = useCollection(
     (toolboxItems) ? toolboxItems : [],
     {
@@ -205,11 +224,29 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksDat
     {
       id: "name",
       header: "Name",
-      cell: (item) => <Button variant="normal" onClick={onTakeItem.bind(undefined, item)}>
-                [{parseInt(item.i) + 1}] {item.TrustedAdvisorCheckName}
-        </Button> || "-",
+      cell: (item) => 
+        <SpaceBetween direction="horizontal" size="xs">
+          <Button variant="normal" onClick={onTakeItem.bind(undefined, item)}>
+              {item.TrustedAdvisorCheckName}
+          </Button>
+          <Popover
+              dismissButton={false}
+              position="top"
+              size="large"
+              triggerType="custom"
+              renderWithPortal
+              content={
+                <Box>
+                  {replaceHtmlTags(item.TrustedAdvisorCheckDesc)}
+                </Box>
+              }
+          >
+            <Button iconName="status-info" variant="icon">More details</Button>
+          </Popover>
+        </SpaceBetween> || "-",
       ariaLabel: toolboxCreateLabelFunction('Name'),
-      sortingField: 'name'
+      sortingField: 'name',
+      width: 450
     },
     {
       id: "description",
@@ -232,7 +269,8 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksDat
       header: "Pillar",
       cell: (item) => item.WAPillarId || "-",
       ariaLabel: toolboxCreateLabelFunction('Pillar'),
-      sortingField: 'pillar'
+      sortingField: 'pillar',
+      width: 160
     },
     {
       id: "businessRisk",
@@ -243,7 +281,8 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksDat
           : item.WABestPracticeRisk === 'Low' ? <StatusIndicator type="info">{item.WABestPracticeRisk}</StatusIndicator>
           : "-",
       ariaLabel: toolboxCreateLabelFunction('Business Risk'),
-      sortingField: 'businessRisk'
+      sortingField: 'businessRisk',
+      width: 150
     },
     {
       id: "taCheckStatus",
@@ -254,7 +293,8 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksDat
           : item.resultStatus === 'ok' ? <StatusIndicator type="success">{item.resultStatus}</StatusIndicator>
           : "-",
       ariaLabel: toolboxCreateLabelFunction('Check Status'),
-      sortingField: 'taCheckStatus'
+      sortingField: 'taCheckStatus',
+      width: 150
     },
     {
         id: "resourceId",
@@ -297,7 +337,7 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksDat
       wrapLines
       resizableColumns
       stickyHeader
-      variant="container"
+      variant="borderless"
       items={items}
       trackBy="uniqueId"
       contentDensity="comfortable"
@@ -315,6 +355,14 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksDat
           {...toolboxCollectionPreferencesProps}
           preferences={preferences}
           onConfirm={({ detail }) => setPreferences(detail)}
+          pageSizePreference={{
+            options: [
+              { value: 25, label: "25 checks" },
+              { value: 50, label: "50 checks" },
+              { value: 75, label: "75 checks" },
+              { value: 100, label: "100 checks" }
+            ]
+          }}
         />
       }
       header={
@@ -340,11 +388,6 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksDat
                   : filteredItemsCount ? "(" + filteredItemsCount + ")"
                   : "(" + toolboxItems.length + ")"}
               </Button>
-              <RisksFullTable data={risksData}/>
-              <Button variant="primary" iconName={"upload"}>
-                <input className="inputButton hidden" type={"file"} accept={".json"} onChange={uploadFile} />
-                Upload json file
-              </Button>
             </SpaceBetween>
           }
         >
@@ -352,18 +395,10 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, risksDat
                   direction="horizontal"
                   size="xxl"
                 >
-                  <div>Trusted Advisor Checks </div>
-                  {<SegmentedControl
-                    selectedId={activeSegment}
-                    onChange={(e) => {
-                      segmentsControl.bind(undefined, e)();
-                    }}
-                    label="Default segmented control"
-                    options={[
-                      { text: "Table view", id: "table" },
-                      { text: "Container view", id: "container" }
-                    ]}
-                  />}
+                  <span>Trusted Advisor Checks </span>
+                  <Badge color="red">High Urgency: {urgencyItemsCount.highUrgencyItemsCount}</Badge>
+                  <Badge color="grey">Medium Urgency: {urgencyItemsCount.mediumUrgencyItemsCount}</Badge>
+                  <Badge color="green">Low Urgency: {urgencyItemsCount.lowUrgencyItemsCount}</Badge>
             </SpaceBetween>
         </Header>
       }
@@ -381,7 +416,7 @@ class RisksFullTable extends React.Component {
     this.handleOpenModal = this.handleOpenModal.bind(this);
     this.handleCloseModal = this.handleCloseModal.bind(this);
   }
-  
+
   handleOpenModal () {
     this.setState({ showModal: true });
   }
@@ -389,24 +424,35 @@ class RisksFullTable extends React.Component {
   handleCloseModal () {
     this.setState({ showModal: false });
   }
-  
+
   render () {
+    if (this.props.risksData != null && newFileUpload) {
+      this.handleOpenModal();
+      newFileUpload = false;
+    }
     return (
       <div>
         <Button 
           variant="normal" 
           onClick={this.handleOpenModal}
-          disabled={this.props.data === null}
+          disabled={this.props.risksData === null}
         >
-            Risks Table
+            Open Risks Table
         </Button>
         <Modal
             size={'max'}
             expandToFit={true}
-            header='Risks'
             footer={
               <Box float="right">
                 <SpaceBetween direction="horizontal" size="xs">
+                  <Button iconName="download" variant="normal" onClick={() => {const currentTime = new Date();
+                    const dataDownloadToCSV = getRisksDataAsCSV(this.props.risksData);
+                    var link = document.createElement('a');
+                    link.setAttribute('href', dataDownloadToCSV);
+                    link.setAttribute('download', 'riskData_' + currentTime.toISOString() + '_UTC.csv');
+                    document.body.appendChild(link);
+                    link.click();}}
+                  >Download CSV</Button>
                   <Popover
                       dismissButton={false}
                       position="top"
@@ -419,15 +465,16 @@ class RisksFullTable extends React.Component {
                         </StatusIndicator>
                       }
                   >
-                    <Button iconName="copy" variant="normal" onClick={() => copyToClipboard(JSON.stringify(this.props.data, undefined, 4))}>Copy</Button>
+                    <Button iconName="copy" variant="normal" onClick={() => copyToClipboard(JSON.stringify(this.props.risksData, undefined, 4))}>Copy All</Button>
                   </Popover>
+                  <Button variant="primary" onClick={this.handleCloseModal}>Close</Button>
                 </SpaceBetween>
               </Box>
             }
             visible={this.state.showModal}
             onDismiss={this.handleCloseModal}
         >
-          <CollectionHooksTable data={this.props.data} />
+          <CollectionHooksTableToolbox toolboxItems={this.props.toolboxItems || []} onTakeItem={this.props.onTakeItem} urgencyItemsCount={this.props.urgencyItemsCount} />
         </Modal>
       </div>
     );
@@ -486,25 +533,20 @@ export default class ToolboxLayout extends React.Component {
     risksInit(this);
   }
 
-  buttonsList = [
-    { onClick: ()=> alert('clicked icon1') },
-    { onClick: ()=> alert('clicked icon2') },
-  ]
-
   generateDOM() {
     return _.map(this.state.layouts[this.state.currentBreakpoint], l => {
       return (
         <div key={l.i}>
           <Container
-            disableContentPaddings
+            // disableContentPaddings
             disableHeaderPaddings
             header={
               <Header
                 variant="h3"
               >
-                {this.state.risksData[l.i].FlaggedResources.status === 'error' ? <Box variant="h3" color="text-status-error"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>[{parseInt(l.i) + 1}]{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
-                  : this.state.risksData[l.i].FlaggedResources.status === 'warning' ? <Box variant="h3" color="text-status-warning"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>[{parseInt(l.i) + 1}]{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
-                  : this.state.risksData[l.i].FlaggedResources.status === 'ok' ? <Box variant="h3" color="text-status-success"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>[{parseInt(l.i) + 1}]{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
+                {this.state.risksData[l.i].FlaggedResources.status === 'error' ? <Box variant="h3" color="text-status-error"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
+                  : this.state.risksData[l.i].FlaggedResources.status === 'warning' ? <Box variant="h3" color="text-status-warning"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
+                  : this.state.risksData[l.i].FlaggedResources.status === 'ok' ? <Box variant="h3" color="text-status-success"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
                   : "-"}
               </Header>
             }
@@ -618,6 +660,7 @@ export default class ToolboxLayout extends React.Component {
           risksData: expandedRisksData
         });
         risksInit(this);
+        newFileUpload = true;
       }; 
       fileReader.onerror = () => {
         console.log(fileReader.error);
@@ -677,9 +720,15 @@ export default class ToolboxLayout extends React.Component {
     let highUrgencyItems = this.getHighUrgencyItems(this.state.toolbox[this.state.currentBreakpoint] || []);
     let mediumUrgencyItems = this.getMediumUrgencyItems(this.state.toolbox[this.state.currentBreakpoint] || []);
     let lowUrgencyItems = this.getLowUrgencyItems(this.state.toolbox[this.state.currentBreakpoint] || []);
+    let urgencyItemsCount={highUrgencyItemsCount: highUrgencyItems.length, mediumUrgencyItemsCount: mediumUrgencyItems.length, lowUrgencyItemsCount: lowUrgencyItems.length};
+
+    let highUrgencyItemsInLayouts = this.getHighUrgencyItems(this.state.layouts[this.state.currentBreakpoint] || []);
+    let mediumUrgencyItemsInLayouts = this.getMediumUrgencyItems(this.state.layouts[this.state.currentBreakpoint] || []);
+    let lowUrgencyItemsInLayouts = this.getLowUrgencyItems(this.state.layouts[this.state.currentBreakpoint] || []);
+    let urgencyItemsCountInLayouts={highUrgencyItemsCount: highUrgencyItemsInLayouts.length, mediumUrgencyItemsCount: mediumUrgencyItemsInLayouts.length, lowUrgencyItemsCount: lowUrgencyItemsInLayouts.length};
     return (
       <div>
-        { !this.state.toolboxTableView ? <Container
+        <Container
           fitHeight={true}
           disableContentPaddings
           header={
@@ -690,7 +739,7 @@ export default class ToolboxLayout extends React.Component {
                   direction="horizontal"
                   size="xs"
                 >
-                  <RisksFullTable data={this.state.risksData}/>
+                  <RisksFullTable toolboxItems={this.state.toolbox[this.state.currentBreakpoint] || []} onTakeItem={this.onTakeItem} risksData={this.state.risksData} urgencyItemsCount={urgencyItemsCount}/>
                   <Button variant="primary" iconName={"upload"}>
                     <input className="inputButton hidden" type={"file"} accept={".json"} onChange={this.uploadFile} />
                     Upload json file
@@ -702,60 +751,27 @@ export default class ToolboxLayout extends React.Component {
                   direction="horizontal"
                   size="xxl"
                 >
-                  <div>Trusted Advisor Checks </div>
-                  {<SegmentedControl
-                    selectedId={this.state.activeSegment}
-                    onChange={(e) => {
-                      this.segmentsControl(e)
-                    }}
-                    label="Default segmented control"
-                    options={[
-                      { text: "Table view", id: "table" },
-                      { text: "Container view", id: "container" }
-                    ]}
-                  />}
-              </SpaceBetween>
+                  <span>Trusted Advisor Checks </span>
+                  <Badge color="red">High Urgency: {urgencyItemsCountInLayouts.highUrgencyItemsCount}</Badge>
+                  <Badge color="grey">Medium Urgency: {urgencyItemsCountInLayouts.mediumUrgencyItemsCount}</Badge>
+                  <Badge color="green">Low Urgency: {urgencyItemsCountInLayouts.lowUrgencyItemsCount}</Badge>
+            </SpaceBetween>
             </Header>
           }
         >
-          <Tabs
-            tabs={[
-              {
-                  label: <div>High Urgency <Badge color="red">{highUrgencyItems.length}</Badge></div>,
-                  id: 'highUrgency',
-                  content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(highUrgencyItems, 'high')}</SpaceBetween></div>
-              },
-              {
-                label: <div>Medium Urgency <Badge color="grey">{mediumUrgencyItems.length}</Badge></div>,
-                id: 'mediumUrgency',
-                content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(mediumUrgencyItems, 'medium')}</SpaceBetween></div>
-              },
-              {
-                label: <div>Low Urgency <Badge color="green">{lowUrgencyItems.length}</Badge></div>,
-                id: 'lowUrgency',
-                content: <div className="toolbox"><SpaceBetween direction="horizontal" size="xxxs">{this.renderToolBoxItems(lowUrgencyItems, 'low')}</SpaceBetween></div>
-              }
-            ]}
-            activeTabId={this.state.activeTab}
-            onChange={(e) => {
-              const newTab = e.detail.activeTabId;
-              this.setState({ activeTab: newTab });
-            }}
-          />
-        </Container> : <Container
-            fitHeight={false}
-            disableContentPaddings
-          >
-            <div className="toolbox-tableview"><CollectionHooksTableToolbox toolboxItems={this.state.toolbox[this.state.currentBreakpoint] || []} onTakeItem={this.onTakeItem} risksData={this.state.risksData} uploadFile={this.uploadFile} segmentsControl={this.segmentsControl} activeSegment={this.state.activeSegment}/></div>
         </Container>
-        }
 
         <div className="yAxisTop">High Impact</div>
         <div className="yAxisBottom">Low Impact</div>
         <div className="xAxisLeft">High Urgency</div>
         <div className="xAxisRight">Low Urgency</div>
         <div className="verticalLine"></div>
-        <hr width="100%" color="gray" className="horizontalLine"></hr>
+        <hr width="98%" color="gray" className="horizontalLine"></hr>
+
+        <div className="doItNow">Do it Now</div>
+        <div className="doItNext">Do it Next</div>
+        <div className="scheduleFirst">Schedule it First</div>
+        <div className="scheduleLast">Schedule it Last</div>
         <ResponsiveReactGridLayout
           {...this.props}
           layouts={this.state.layouts}
