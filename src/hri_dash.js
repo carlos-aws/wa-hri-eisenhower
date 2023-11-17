@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import { copyToClipboard, replaceHtmlTags } from './utils/utilities';
-import { Button, Container, SpaceBetween, Header, Tabs, Badge, Popover, StatusIndicator, SegmentedControl,
+import { Button, Container, SpaceBetween, Header, Badge, Popover, StatusIndicator,
   Modal, Link, Box, Table, TextFilter, Pagination, CollectionPreferences, PropertyFilter } from "@cloudscape-design/components";
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { fullColumnDefinitions, getMatchesCountText, paginationLabels, collectionPreferencesProps } from './utils/full-table-config';
@@ -427,7 +427,7 @@ class RisksFullTable extends React.Component {
 
   render () {
     if (this.props.risksData != null && newFileUpload) {
-      this.handleOpenModal();
+      this.setState({ showModal: true });
       newFileUpload = false;
     }
     return (
@@ -522,10 +522,7 @@ export default class ToolboxLayout extends React.Component {
     mounted: false,
     layouts: { lg: this.props.initialLayout },
     toolbox: { lg: [] },
-    risksData: null,
-    activeTab: 'highUrgency',
-    toolboxTableView: true,
-    activeSegment: 'table'
+    risksData: null
   };
 
   componentDidMount() {
@@ -538,7 +535,6 @@ export default class ToolboxLayout extends React.Component {
       return (
         <div key={l.i}>
           <Container
-            // disableContentPaddings
             disableHeaderPaddings
             header={
               <Header
@@ -599,6 +595,20 @@ export default class ToolboxLayout extends React.Component {
   };
 
   onPutItem = item => {
+    item.TrustedAdvisorCheckId = this.state.risksData[item.i].TrustedAdvisorCheckId;
+    item.TrustedAdvisorCheckName = this.state.risksData[item.i].TrustedAdvisorCheckName;
+    item.TrustedAdvisorCheckDesc = this.state.risksData[item.i].TrustedAdvisorCheckDesc;
+    item.WAPillarId = this.state.risksData[item.i].WAPillarId;
+    item.WAQuestionId = this.state.risksData[item.i].WAQuestionId;
+    item.WABestPracticeId = this.state.risksData[item.i].WABestPracticeId;
+    item.WABestPracticeTitle = this.state.risksData[item.i].WABestPracticeTitle;
+    item.WABestPracticeDesc = this.state.risksData[item.i].WABestPracticeDesc;
+    item.WABestPracticeRisk = this.state.risksData[item.i].WABestPracticeRisk;
+    item.resourceId = this.state.risksData[item.i].resourceId;
+    item.resultStatus = this.state.risksData[item.i].FlaggedResources.status;
+    item.region = this.state.risksData[item.i].FlaggedResources.region;
+    item.uniqueId = this.state.risksData[item.i].uniqueI;
+    item.FlaggedResources = this.state.risksData[item.i].FlaggedResources;
     this.setState(prevState => {
       return {
         toolbox: {
@@ -708,12 +718,6 @@ export default class ToolboxLayout extends React.Component {
       }
     }
     return lowUrgencyItems
-  }
-
-  segmentsControl = (event) => {
-    const newSegment = event.detail.selectedId;
-    this.setState({ activeSegment: newSegment });
-    this.setState({ toolboxTableView: event.detail.selectedId === 'table' ? true : false });
   }
 
   render() {
@@ -835,7 +839,8 @@ function generateLayout(uploaded=false,risksData=null) {
           resourceId: risksData[i].resourceId,
           resultStatus: risksData[i].FlaggedResources.status,
           region: risksData[i].FlaggedResources.region,
-          uniqueId: risksData[i].uniqueId
+          uniqueId: risksData[i].uniqueId,
+          FlaggedResources: risksData[i].FlaggedResources
           };
       });
     }
