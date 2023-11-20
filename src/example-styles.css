@@ -218,9 +218,10 @@ body {
   .hide-button {
     cursor: pointer;
     position: absolute;
-    font-size: 20px;
-    top: 0px;
-    right: 5px;
+    font-size: 30px;
+    top: -7%;
+    right: 92%;
+    z-index: 10;
   }
   
   .toolbox__title {

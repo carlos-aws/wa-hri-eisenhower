@@ -423,13 +423,10 @@ class RisksFullTable extends React.Component {
   
   handleCloseModal () {
     this.setState({ showModal: false });
+    newFileUpload = false;
   }
 
   render () {
-    if (this.props.risksData != null && newFileUpload) {
-      this.setState({ showModal: true });
-      newFileUpload = false;
-    }
     return (
       <div>
         <Button 
@@ -471,7 +468,7 @@ class RisksFullTable extends React.Component {
                 </SpaceBetween>
               </Box>
             }
-            visible={this.state.showModal}
+            visible={this.state.showModal || newFileUpload}
             onDismiss={this.handleCloseModal}
         >
           <CollectionHooksTableToolbox toolboxItems={this.props.toolboxItems || []} onTakeItem={this.props.onTakeItem} urgencyItemsCount={this.props.urgencyItemsCount} />
@@ -534,19 +531,16 @@ export default class ToolboxLayout extends React.Component {
     return _.map(this.state.layouts[this.state.currentBreakpoint], l => {
       return (
         <div key={l.i}>
+          <div className="hide-button">
+            <Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>
+          </div>
           <Container
             disableHeaderPaddings
-            header={
-              <Header
-                variant="h3"
-              >
-                {this.state.risksData[l.i].FlaggedResources.status === 'error' ? <Box variant="h3" color="text-status-error"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
-                  : this.state.risksData[l.i].FlaggedResources.status === 'warning' ? <Box variant="h3" color="text-status-warning"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
-                  : this.state.risksData[l.i].FlaggedResources.status === 'ok' ? <Box variant="h3" color="text-status-success"><Button iconName="close" variant="icon" onClick={this.onPutItem.bind(this, l)}/>{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
-                  : "-"}
-              </Header>
-            }
           >
+            {this.state.risksData[l.i].FlaggedResources.status === 'error' ? <Box textAlign="center" variant="h3" color="text-status-error">{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
+                  : this.state.risksData[l.i].FlaggedResources.status === 'warning' ? <Box textAlign="center" variant="h3" color="text-status-warning">{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
+                  : this.state.risksData[l.i].FlaggedResources.status === 'ok' ? <Box textAlign="center" variant="h3" color="text-status-success">{this.state.risksData[l.i].TrustedAdvisorCheckName}</Box>
+                  : "-"}
             <SpaceBetween
               alignItems="center"
               direction="vertical"
