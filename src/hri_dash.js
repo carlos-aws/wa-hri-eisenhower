@@ -175,18 +175,18 @@ export function CollectionHooksTable({ data }) {
 function getRisksDataAsCSV(rawRisksData) {
   const replacer = (key, value) => value === null ? '' : value;
   const header = Object.keys(rawRisksData[0]);
-  const csvContent = 'data:text/csv;charset=utf-8,' + [
+  const csvContent = [
     header.join(','),
     ...rawRisksData.map(row => header.map(fieldName => {
       if (fieldName === 'TrustedAdvisorCheckDesc') {
-        return(JSON.stringify(row[fieldName], replacer).replace(/,/g, ";").replace(/#/g, "%23"))
+        return(JSON.stringify(row[fieldName], replacer).replace(/,/g, ";"))
       }
       else {
         return(JSON.stringify(row[fieldName], replacer).replace(/,/g, ";"))
       }
     }).join(','))
   ].join('\r\n');
-  return (csvContent);
+  return 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
 }
 
 function toolboxCreateLabelFunction(columnName) {
@@ -516,14 +516,12 @@ export default class ToolboxLayout extends React.Component {
   state = {
     currentBreakpoint: "lg",
     compactType: null,
-    mounted: false,
     layouts: { lg: this.props.initialLayout },
     toolbox: { lg: [] },
     risksData: null
   };
 
   componentDidMount() {
-    this.setState({ mounted: true });
     risksInit(this);
   }
 
@@ -776,7 +774,6 @@ export default class ToolboxLayout extends React.Component {
           onBreakpointChange={this.onBreakpointChange}
           onLayoutChange={this.onLayoutChange}
           measureBeforeMount={false}
-          // useCSSTransforms={this.state.mounted}
           useCSSTransforms={false}
           compactType={this.state.compactType}
           preventCollision={!this.state.compactType}
