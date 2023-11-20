@@ -776,7 +776,8 @@ export default class ToolboxLayout extends React.Component {
           onBreakpointChange={this.onBreakpointChange}
           onLayoutChange={this.onLayoutChange}
           measureBeforeMount={false}
-          useCSSTransforms={this.state.mounted}
+          // useCSSTransforms={this.state.mounted}
+          useCSSTransforms={false}
           compactType={this.state.compactType}
           preventCollision={!this.state.compactType}
           allowOverlap={true}
