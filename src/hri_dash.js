@@ -8,6 +8,7 @@ import { useCollection } from '@cloudscape-design/collection-hooks';
 import { fullColumnDefinitions, getMatchesCountText, paginationLabels, collectionPreferencesProps } from './utils/full-table-config';
 import { toolboxGetMatchesCountText, toolboxPaginationLabels, toolboxCollectionPreferencesProps,
   toolboxFilteringProperties, propertyFilterI18nStrings, TableEmptyState, TableNoMatchState } from './utils/toolbox-table-config';
+import ta_checks from './data/ta_checks.json';
 import '@cloudscape-design/global-styles/index.css';
 import '/node_modules/react-grid-layout/css/styles.css';
 import '/node_modules/react-resizable/css/styles.css';
@@ -16,6 +17,8 @@ import './example-styles.css';
 const ResponsiveReactGridLayout = WidthProvider(Responsive);
 
 let newFileUpload = false;
+
+const taChecksDetails = ta_checks.checks;
 
 class RisksDetails extends React.Component {
   constructor () {
@@ -633,13 +636,28 @@ export default class ToolboxLayout extends React.Component {
     });
   }
 
+  parseCheckMetadata = (checkId, checkFlaggedResourcesMetadata) => {
+    let index = taChecksDetails.findIndex(check => check.id === checkId);
+    let resourceId = '';
+    if (index !== -1) {
+      for (let i = 0; i < taChecksDetails[index].metadata.length; i++) {
+        resourceId = resourceId + taChecksDetails[index].metadata[i] + ": " + checkFlaggedResourcesMetadata[i] + ", "
+      }
+      resourceId = resourceId.slice(0, -2)
+    }
+    else {
+      resourceId = checkFlaggedResourcesMetadata.join(", ")
+    }
+    return resourceId
+  }
+
   expandFlaggedResources = (risksData) => {
     let expandedRisksData = [];
     for (let i = 0; i < risksData.length; i++) {
       for (let n = 0; n < risksData[i].FlaggedResources.length; n++) {
         let tmpRisksObject = JSON.parse(JSON.stringify(risksData[i]));
         tmpRisksObject.FlaggedResources = risksData[i].FlaggedResources[n];
-        tmpRisksObject.resourceId = (risksData[i].FlaggedResources[n].metadata) ? risksData[i].FlaggedResources[n].metadata.join(", ") : '';
+        tmpRisksObject.resourceId = (risksData[i].FlaggedResources[n].metadata) ? this.parseCheckMetadata(risksData[i].TrustedAdvisorCheckId, risksData[i].FlaggedResources[n].metadata) : '';
         tmpRisksObject.uniqueId = risksData[i].TrustedAdvisorCheckId + "_" + risksData[i].FlaggedResources[n].resourceId
         expandedRisksData.push(tmpRisksObject);
       }
@@ -816,7 +834,7 @@ function generateLayout(uploaded=false,risksData=null) {
           x: 5,
           y: 9,
           w: 2,
-          h: 3,
+          h: 2,
           i: i.toString(),
           static: false,
           TrustedAdvisorCheckId: risksData[i].TrustedAdvisorCheckId,
