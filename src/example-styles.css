@@ -3,6 +3,9 @@ body {
     font-family: sans-serif;
     zoom: 85%;
   }
+  clp-test {
+    white-space: pre-wrap; /* or pre-line */
+  }
   #content {
     width: 100%;
   }

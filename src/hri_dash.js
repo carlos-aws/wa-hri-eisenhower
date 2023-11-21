@@ -761,15 +761,22 @@ export default class ToolboxLayout extends React.Component {
                 </SpaceBetween>
               }
             >
+              {urgencyItemsCountInLayouts.highUrgencyItemsCount + urgencyItemsCountInLayouts.mediumUrgencyItemsCount + urgencyItemsCountInLayouts.lowUrgencyItemsCount !== 0 ?
               <SpaceBetween
                   direction="horizontal"
                   size="xxl"
                 >
-                  <span>Trusted Advisor Checks </span>
+                  <span>Trusted Advisor Checks</span>
                   <Badge color="red">High Urgency: {urgencyItemsCountInLayouts.highUrgencyItemsCount}</Badge>
                   <Badge color="grey">Medium Urgency: {urgencyItemsCountInLayouts.mediumUrgencyItemsCount}</Badge>
                   <Badge color="green">Low Urgency: {urgencyItemsCountInLayouts.lowUrgencyItemsCount}</Badge>
-            </SpaceBetween>
+              </SpaceBetween> :
+              <SpaceBetween
+                  direction="horizontal"
+                  size="xxl"
+                >
+                  <span>Trusted Advisor Checks</span>
+              </SpaceBetween> }
             </Header>
           }
         >
