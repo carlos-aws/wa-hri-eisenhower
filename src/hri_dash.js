@@ -268,7 +268,7 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
           </Popover>
         </SpaceBetween> || "-",
       ariaLabel: toolboxCreateLabelFunction('Name'),
-      sortingField: 'name',
+      sortingField: 'TrustedAdvisorCheckName',
       width: 450
     },
     {
@@ -276,7 +276,7 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
       header: "Description",
       cell: (item) => <span>{replaceHtmlTags(item.TrustedAdvisorCheckDesc)}</span> || "-",
       ariaLabel: toolboxCreateLabelFunction('Description'),
-      sortingField: 'description'
+      sortingField: 'TrustedAdvisorCheckDesc'
     },
     {
       id: "bestPractice",
@@ -285,14 +285,14 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
         <Link external href={'https://docs.aws.amazon.com/wellarchitected/latest/framework/' + item.WABestPracticeId + '.html'}>{item.WABestPracticeTitle || "-"}</Link>
       ),
       ariaLabel: toolboxCreateLabelFunction('Best Practice'),
-      sortingField: 'bestPractice'
+      sortingField: 'WABestPracticeId'
     },
     {
       id: "pillar",
       header: "Pillar",
       cell: (item) => item.WAPillarId || "-",
       ariaLabel: toolboxCreateLabelFunction('Pillar'),
-      sortingField: 'pillar',
+      sortingField: 'WAPillarId',
       width: 160
     },
     {
@@ -304,7 +304,7 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
           : item.WABestPracticeRisk === 'Low' ? <StatusIndicator type="info">{item.WABestPracticeRisk}</StatusIndicator>
           : "-",
       ariaLabel: toolboxCreateLabelFunction('Business Risk'),
-      sortingField: 'businessRisk',
+      sortingField: 'WABestPracticeRisk',
       width: 150
     },
     {
@@ -316,22 +316,20 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
           : item.resultStatus === 'ok' ? <StatusIndicator type="success">{item.resultStatus}</StatusIndicator>
           : "-",
       ariaLabel: toolboxCreateLabelFunction('Check Status'),
-      sortingField: 'taCheckStatus',
+      sortingField: 'resultStatus',
       width: 150
     },
     {
         id: "resourceId",
         header: "Resource at Risk",
-        cell: (item) => item.resourceId || "-",
-        ariaLabel: toolboxCreateLabelFunction('Resource at Risk'),
-        sortingField: 'resourceId'
+        cell: (item) => item.resourceId.split(", ").map((resource, index) => index ? <><br/>{resource}</> : <>{resource}</>) || "-",
+        ariaLabel: toolboxCreateLabelFunction('Resource at Risk')
     },
     {
       id: "resourceRaw",
       header: "Resource at Risk (Raw)",
       cell: (item) => JSON.stringify(item.FlaggedResources, null, 4) || "-",
-      ariaLabel: toolboxCreateLabelFunction('Resource at Risk (Raw)'),
-      sortingField: 'resourceRaw'
+      ariaLabel: toolboxCreateLabelFunction('Resource at Risk (Raw)')
     },
     {
       id: "region",
@@ -339,13 +337,6 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
       cell: (item) => item.region || "-",
       ariaLabel: toolboxCreateLabelFunction('Region'),
       sortingField: 'region'
-    },
-    {
-      id: "uniqueId",
-      header: "UniqueId",
-      cell: (item) => item.uniqueId || "-",
-      ariaLabel: toolboxCreateLabelFunction('UniqueId'),
-      sortingField: 'uniqueId'
     },
   ];
 
