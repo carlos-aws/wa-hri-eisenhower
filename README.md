@@ -1,5 +1,7 @@
 ## Simple eisenhower matrix using react-grid for prioritizing AWS Well-Architected HRI
 
+Note: Before proceeding with below steps, make sure you have [installed Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+
 ### Option 1 - Install and Run Locally
 
 1. Clone the repository:
@@ -53,3 +55,13 @@ npm run build
 ![aws_prioritization_matrix_app_sample_start.png](./static/images/aws_prioritization_matrix_app_sample_start.png)
 
 ![aws_prioritization_matrix_app_sample.png](./static/images/aws_prioritization_matrix_app_sample.png)
+
+### Cleanup (In case deployed via AWS Amplify)
+
+1. In the AWS Amplify Console, open your application and click on **"Actions" > "Delete app"**:
+
+![aws_amplify_cleanup_1.png](./static/images/aws_amplify_cleanup_1.png)
+
+2. In the confirmation window, type *"delete"* and click on the **"Delete"** button:
+
+![aws_amplify_cleanup_2.png](./static/images/aws_amplify_cleanup_2.png)
