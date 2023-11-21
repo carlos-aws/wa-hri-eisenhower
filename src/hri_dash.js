@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import { copyToClipboard, replaceHtmlTags } from './utils/utilities';
-import { Button, Container, SpaceBetween, Header, Badge, Popover, StatusIndicator,
+import { Button, Container, SpaceBetween, Header, Badge, Popover, StatusIndicator, ButtonDropdown,
   Modal, Link, Box, Table, TextFilter, Pagination, CollectionPreferences, PropertyFilter } from "@cloudscape-design/components";
 import { useCollection } from '@cloudscape-design/collection-hooks';
 import { fullColumnDefinitions, getMatchesCountText, paginationLabels, collectionPreferencesProps } from './utils/full-table-config';
 import { toolboxGetMatchesCountText, toolboxPaginationLabels, toolboxCollectionPreferencesProps,
   toolboxFilteringProperties, propertyFilterI18nStrings, TableEmptyState, TableNoMatchState } from './utils/toolbox-table-config';
 import ta_checks from './data/ta_checks.json';
+import sample_data from './data/my_hri.json';
 import '@cloudscape-design/global-styles/index.css';
 import '/node_modules/react-grid-layout/css/styles.css';
 import '/node_modules/react-resizable/css/styles.css';
@@ -120,7 +121,7 @@ class RiskDetails extends React.Component {
                     {
                       id: "resource",
                       header: "Resource at Risk",
-                      cell: (item) => item.resourceId.split(", ").map((item, index) => index ? <><br/>{item}</> : <>{item}</>) || "-",
+                      cell: (item) => item.resourceId.split(", ").map((item, index) => index ? <span key={index}><br/>{item}</span> : <span key={index}>{item}</span>) || "-",
                       width: 300
                     },
                   ]}
@@ -259,7 +260,7 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
               triggerType="custom"
               renderWithPortal
               content={
-                <Box>
+                <Box variant="p">
                   {replaceHtmlTags(item.TrustedAdvisorCheckDesc)}
                 </Box>
               }
@@ -322,7 +323,7 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
     {
         id: "resourceId",
         header: "Resource at Risk",
-        cell: (item) => item.resourceId.split(", ").map((resource, index) => index ? <><br/>{resource}</> : <>{resource}</>) || "-",
+        cell: (item) => item.resourceId.split(", ").map((resource, index) => index ? <span key={index}><br/>{resource}</span> : <span key={index}>{resource}</span>) || "-",
         ariaLabel: toolboxCreateLabelFunction('Resource at Risk')
     },
     {
@@ -353,7 +354,6 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
       stickyHeader
       variant="borderless"
       items={items}
-      trackBy="uniqueId"
       contentDensity="comfortable"
       pagination={<Pagination {...paginationProps} ariaLabels={toolboxPaginationLabels} />}
       filter={
@@ -564,7 +564,7 @@ export default class ToolboxLayout extends React.Component {
                 : this.state.risksData[l.i].FlaggedResources.status === 'warning' ? "text-status-warning"
                 : this.state.risksData[l.i].FlaggedResources.status === 'ok' ? "text-status-success" : "inherit"}
               >
-                {this.state.risksData[l.i].resourceId.split(", ").map((item, index) => index ? <><br/>{item}</> : <>{item}</>)}
+                {this.state.risksData[l.i].resourceId.split(", ").map((item, index) => index ? <span key={index}><br/>{item}</span> : <span key={index}>{item}</span>)}
               </Box>
               <RiskDetails data={this.state.risksData[l.i]}/>
             </SpaceBetween>
@@ -681,6 +681,17 @@ export default class ToolboxLayout extends React.Component {
     return expandedRisksData
   }
 
+  loadSampleData = () => {
+    let expandedRisksData = this.expandFlaggedResources(sample_data);
+    let layout = generateLayout(true, expandedRisksData);
+    this.setState({
+      layouts: { lg: layout },
+      risksData: expandedRisksData
+    });
+    risksInit(this);
+    newFileUpload = true;
+  }
+
   uploadFile = (event) => {
     let file = event.target.files[0];
     this.resetLayout();
@@ -774,6 +785,15 @@ export default class ToolboxLayout extends React.Component {
                     <input className="inputButton hidden" type={"file"} accept={".json"} onChange={this.uploadFile} />
                     Upload json file
                   </Button>
+                  <ButtonDropdown
+                    expandToViewport
+                    items={[
+                      { id: "load-sample", text: "Load Sample Data", disabled: this.state.risksData !== null }
+                    ]}
+                    ariaLabel="Load Data Options"
+                    variant="icon"
+                    onItemClick={this.loadSampleData}
+                  />
                 </SpaceBetween>
               }
             >
