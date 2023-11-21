@@ -3,9 +3,8 @@ import _ from "lodash";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import { copyToClipboard, replaceHtmlTags } from './utils/utilities';
 import { Button, Container, SpaceBetween, Header, Badge, Popover, StatusIndicator, ButtonDropdown,
-  Modal, Link, Box, Table, TextFilter, Pagination, CollectionPreferences, PropertyFilter } from "@cloudscape-design/components";
+  Modal, Link, Box, Table, Pagination, CollectionPreferences, PropertyFilter } from "@cloudscape-design/components";
 import { useCollection } from '@cloudscape-design/collection-hooks';
-import { fullColumnDefinitions, getMatchesCountText, paginationLabels, collectionPreferencesProps } from './utils/full-table-config';
 import { toolboxGetMatchesCountText, toolboxPaginationLabels, toolboxCollectionPreferencesProps,
   toolboxFilteringProperties, propertyFilterI18nStrings, TableEmptyState, TableNoMatchState } from './utils/toolbox-table-config';
 import ta_checks from './data/ta_checks.json';
@@ -54,6 +53,7 @@ class RiskDetails extends React.Component {
                 <SpaceBetween direction="horizontal" size="xs">
                   <Popover
                     dismissButton={false}
+                    renderWithPortal
                     position="top"
                     size="small"
                     triggerType="custom"
@@ -146,54 +146,6 @@ class RiskDetails extends React.Component {
       </div>
     );
   }
-}
-
-export function CollectionHooksTable({ data }) {
-  const [preferences, setPreferences] = useState({ pageSize: 10, visibleContent: ['name', 'description', 'bestPractice', 'pillar', 'businessRisk', 'resourceId'] });
-  const { items, filteredItemsCount, collectionProps, filterProps, paginationProps } = useCollection(
-    (data) ? data : [],
-    {
-      filtering: {
-        empty: <Box
-                  margin={{ vertical: "xs" }}
-                  textAlign="center"
-                  color="inherit"
-                >
-                  <SpaceBetween size="m">
-                    <b>No data</b>
-                  </SpaceBetween>
-                </Box>,
-        noMatch: "No matches",
-      },
-      pagination: { pageSize: preferences.pageSize },
-      sorting: {},
-    }
-  );
-  return (
-    <Table
-      {...collectionProps}
-      columnDefinitions={fullColumnDefinitions}
-      visibleColumns={preferences.visibleContent}
-      wrapLines
-      stickyHeader
-      items={items}
-      pagination={<Pagination {...paginationProps} ariaLabels={paginationLabels} />}
-      filter={
-        <TextFilter
-          {...filterProps}
-          countText={getMatchesCountText(filteredItemsCount)}
-          filteringAriaLabel="Filter data"
-        />
-      }
-      preferences={
-        <CollectionPreferences
-          {...collectionPreferencesProps}
-          preferences={preferences}
-          onConfirm={({ detail }) => setPreferences(detail)}
-        />
-      }
-    />
-  );
 }
 
 function getRisksDataAsCSV(rawRisksData) {
@@ -492,32 +444,6 @@ class RisksFullTable extends React.Component {
   }
 }
 
-class ToolBoxItem extends React.Component {
-  render() {
-    if (this.props.urgency === 'high') {
-      return (
-        <Button iconName="status-warning" variant="normal" onClick={this.props.onTakeItem.bind(undefined, this.props.item)}>
-          [{parseInt(this.props.item.i) + 1}] {this.props.risksData[this.props.item.i].TrustedAdvisorCheckName} ({this.props.risksData[this.props.item.i].resourceId})
-        </Button>
-      );
-    }
-    if (this.props.urgency === 'medium') {
-      return (
-        <Button iconName="status-stopped" variant="normal" onClick={this.props.onTakeItem.bind(undefined, this.props.item)}>
-          [{parseInt(this.props.item.i) + 1}] {this.props.risksData[this.props.item.i].TrustedAdvisorCheckName} ({this.props.risksData[this.props.item.i].resourceId})
-        </Button>
-      );
-    }
-    if (this.props.urgency === 'low') {
-      return (
-        <Button iconName="status-pending" variant="normal" onClick={this.props.onTakeItem.bind(undefined, this.props.item)}>
-          [{parseInt(this.props.item.i) + 1}] {this.props.risksData[this.props.item.i].TrustedAdvisorCheckName} ({this.props.risksData[this.props.item.i].resourceId})
-        </Button>
-      );
-    }
-  }
-}
-
 export default class ToolboxLayout extends React.Component {
   static defaultProps = {
     className: "layout",
@@ -713,18 +639,6 @@ export default class ToolboxLayout extends React.Component {
         console.log(fileReader.error);
       }; 
     }
-  }
-
-  renderToolBoxItems = (items, urgency) => {
-    return (items.map(item => (
-      <ToolBoxItem
-        key={item.i}
-        item={item}
-        onTakeItem={this.onTakeItem}
-        risksData={this.state.risksData}
-        urgency={urgency}
-      />
-    )))
   }
 
   getHighUrgencyItems = (items) => {
