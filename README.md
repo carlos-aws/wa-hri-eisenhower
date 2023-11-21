@@ -50,6 +50,6 @@ npm run build
 
 ![aws_amplify_get_started_4.png](./static/images/aws_amplify_get_started_4.png)
 
-![aws_prioritization_matrix_app_sample_start.png](./static/images/aws_ prioritization_matrix_app_sample_start.png)
+![aws_prioritization_matrix_app_sample_start.png](./static/images/aws_prioritization_matrix_app_sample_start.png)
 
-![aws_prioritization_matrix_app_sample.png](./static/images/aws_ prioritization_matrix_app_sample.png)
+![aws_prioritization_matrix_app_sample.png](./static/images/aws_prioritization_matrix_app_sample.png)
