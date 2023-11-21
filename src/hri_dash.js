@@ -20,7 +20,7 @@ let newFileUpload = false;
 
 const taChecksDetails = ta_checks.checks;
 
-class RisksDetails extends React.Component {
+class RiskDetails extends React.Component {
   constructor () {
     super();
     this.state = {
@@ -80,34 +80,54 @@ class RisksDetails extends React.Component {
                     {
                       id: "description",
                       header: "Description",
-                      cell: (item) => <span>{replaceHtmlTags(item.TrustedAdvisorCheckDesc)}</span> || "-"
+                      cell: (item) => <span>{replaceHtmlTags(item.TrustedAdvisorCheckDesc)}</span> || "-",
+                      width: 550
                     },
                     {
                       id: "bestPractice",
                       header: "Best Practice",
                       cell: (item) => (
                         <Link external href={bp_url}>{item.WABestPracticeTitle || "-"}</Link>
-                      )
+                      ),
+                      width: 160
                     },
                     {
                       id: "pillar",
                       header: "Pillar",
-                      cell: (item) => item.WAPillarId || "-"
+                      cell: (item) => item.WAPillarId || "-",
+                      width: 160
                     },
                     {
                       id: "businessRisk",
                       header: "Business Risk",
-                      cell: (item) => item.WABestPracticeRisk || "-"
+                      cell: (item) => 
+                        item.WABestPracticeRisk === 'High' ? <StatusIndicator type="error">{item.WABestPracticeRisk}</StatusIndicator>
+                          : item.WABestPracticeRisk === 'Medium' ? <StatusIndicator type="warning">{item.WABestPracticeRisk}</StatusIndicator>
+                          : item.WABestPracticeRisk === 'Low' ? <StatusIndicator type="info">{item.WABestPracticeRisk}</StatusIndicator>
+                          : "-",
+                      width: 150
+                    },
+                    {
+                      id: "taCheckStatus",
+                      header: "Check Status",
+                      cell: (item) => 
+                        item.FlaggedResources.status === 'error' ? <StatusIndicator type="error">{item.FlaggedResources.status}</StatusIndicator>
+                          : item.FlaggedResources.status === 'warning' ? <StatusIndicator type="warning">{item.FlaggedResources.status}</StatusIndicator>
+                          : item.FlaggedResources.status === 'ok' ? <StatusIndicator type="success">{item.FlaggedResources.status}</StatusIndicator>
+                          : "-",
+                      width: 150
                     },
                     {
                       id: "resource",
                       header: "Resource at Risk",
-                      cell: (item) => JSON.stringify(item.FlaggedResources, null, 4) || "-"
+                      cell: (item) => item.resourceId.split(", ").map((item, index) => index ? <><br/>{item}</> : <>{item}</>) || "-",
+                      width: 300
                     },
                   ]}
                   items={[this.props.data]}
                   loadingText="Loading data"
                   sortingDisabled
+                  resizableColumns
                   wrapLines
                   empty={
                     <Box
@@ -244,7 +264,7 @@ export function CollectionHooksTableToolbox({ toolboxItems, onTakeItem, urgencyI
                 </Box>
               }
           >
-            <Button iconName="status-info" variant="icon">More details</Button>
+            <Button iconName="status-info" variant="icon"></Button>
           </Popover>
         </SpaceBetween> || "-",
       ariaLabel: toolboxCreateLabelFunction('Name'),
@@ -547,10 +567,15 @@ export default class ToolboxLayout extends React.Component {
               direction="vertical"
               size="xs"
             >
-              <Box variant="p">
-                {this.state.risksData[l.i].resourceId}
+              <Box 
+                variant="p"
+                color={this.state.risksData[l.i].FlaggedResources.status === 'error' ? "text-status-error"
+                : this.state.risksData[l.i].FlaggedResources.status === 'warning' ? "text-status-warning"
+                : this.state.risksData[l.i].FlaggedResources.status === 'ok' ? "text-status-success" : "inherit"}
+              >
+                {this.state.risksData[l.i].resourceId.split(", ").map((item, index) => index ? <><br/>{item}</> : <>{item}</>)}
               </Box>
-              <RisksDetails data={this.state.risksData[l.i]}/>
+              <RiskDetails data={this.state.risksData[l.i]}/>
             </SpaceBetween>
           </Container>
         </div>
